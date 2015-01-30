@@ -238,7 +238,7 @@ public class Main //implements Observer
 			//some auto logic for now
 			//target size for whole file: 4 x windowWidth
 			//only natural / exact, >=1 FPP frames per pixel value possible
-			width=windowWidth*8
+			width=windowWidth*8;
 
 			//resolution greater than 1 sample per pixel missing
 			if(width>props.getFrameCount())
