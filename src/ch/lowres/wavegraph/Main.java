@@ -83,7 +83,7 @@ public class Main //implements Observer
 
 	public static DecimalFormat df = new DecimalFormat("#,###,###,##0");
 	public static DecimalFormat df2 = new DecimalFormat("#,###,###,##0.00");
-	public static DecimalFormat df3 = new DecimalFormat("0,000,000,000");
+	public static DecimalFormat df3 = new DecimalFormat("#,000,000,000");
 
 	public static int ctrlOrCmd=InputEvent.CTRL_MASK;
 	public static OSTest os=new OSTest();
@@ -198,8 +198,6 @@ public class Main //implements Observer
 		buttonAbort.setVisible(false);
 
 		viewPortInfoLabel1.setText("");
-		//viewPortInfoLabel2.setText("");
-		//viewPortInfoLabel3.setText("");
 
 		viewPortInfoLabelPixelsWidth.setText("");
 		viewPortInfoLabelPixelsFrom.setText("");
@@ -240,7 +238,7 @@ public class Main //implements Observer
 			//some auto logic for now
 			//target size for whole file: 4 x windowWidth
 			//only natural / exact, >=1 FPP frames per pixel value possible
-			width=windowWidth*16;
+			width=windowWidth*8
 
 			//resolution greater than 1 sample per pixel missing
 			if(width>props.getFrameCount())
@@ -251,6 +249,17 @@ public class Main //implements Observer
 			//start work
 			scanner.scanData(width);
 			//scanner.scanData((long)(props.getFrameCount()/2),(long)(props.getFrameCount()/2),width);
+
+			updateTimer.stop();
+
+			SwingUtilities.invokeLater(new Runnable()
+			{
+				public void run()
+				{
+					graph.repaint();
+					scrollpane.repaint();
+				}
+			});
 		}
 		catch(Exception e)
 		{
@@ -355,19 +364,19 @@ public class Main //implements Observer
 
 		viewPortInfoLabelPixelsWidth.setText(
 			"|  "+
-				df.format(
+				df3.format(
 				(long)visibleRect.getWidth())
 		);
 
 		viewPortInfoLabelPixelsFrom.setText(
 			"|  "+
-				df.format(scrollOffset
+				df3.format(scrollOffset
 				)
 		);
 
 		viewPortInfoLabelPixelsTo.setText(
 			"-- "+
-				df.format(scrollOffset+visibleRect.getWidth()
+				df3.format(scrollOffset+visibleRect.getWidth()
 				)
 		);
 

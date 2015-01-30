@@ -46,7 +46,6 @@ public class WaveGraph extends JPanel
 		blocks.add(awb);
 	}
 
-
 //=======================================================
 	public void clear()
 	{
@@ -135,10 +134,11 @@ needs special treatment for extrema (peaks, start, end)
 		if(suppressRepaint)
 		{
 			final Graphics2D g2 = (Graphics2D) g;
-			g2.setStroke(new BasicStroke(10));
-			g2.draw(new Line2D.Float(0,getHeight()/2,getWidth(),getHeight()/2));
-			//g2.setColor(Color.blue);
-			//g2.fill(new Rectangle(0,0,(int)getWidth(),(int)getHeight()));
+
+			g2.setColor(Color.gray);
+			g2.setStroke(new BasicStroke(35));
+			int h2=m.scrollpane.getHeight()/2;
+			g2.draw(new Line2D.Float(0,h2,getWidth(),h2));
 			return;
 		}
 
@@ -194,21 +194,12 @@ needs special treatment for extrema (peaks, start, end)
 		}
 
 		//channels should never be 0 (div zero!)
-		float waveHeightMax=(float) (( (m.scrollpane.getHeight()-sbHeight) /m.props.getChannels()) / 2);
+		float waveHeightMax=(float) (( (m.scrollpane.getHeight()-sbHeight*2) /m.props.getChannels()) / 2);
 		waveHeight=waveHeightMax*0.9f;
 
 		float gap=waveHeightMax-waveHeight;
 
 		g2.setStroke(new BasicStroke(1));
-
-		for(int i=0;i<m.props.getChannels();i++)
-		{
-			baseLineY=//(int)
-				( (2*(i+1)-1) * waveHeightMax);
-			g2.setColor(Color.gray);
-			g2.draw(new Line2D.Float(0, baseLineY-waveHeight, m.width, baseLineY-waveHeight));
-			g2.draw(new Line2D.Float(0, baseLineY+waveHeight, m.width, baseLineY+waveHeight));
-		}
 
 		AggregatedWaveBlock awb=null;
 		AggregatedWaveBlock next=null;
@@ -242,17 +233,20 @@ needs special treatment for extrema (peaks, start, end)
 			//paint vertical amplitude blocks
 			g2.setColor(Color.black);
 			awb.paint(g2, waveHeight, baseLineY);
+
+			//paint +1/-1 limits
+			g2.setColor(Color.red);
+			g2.draw(new Line2D.Double(awb.block, baseLineY-waveHeight, 10, baseLineY-waveHeight));
+			g2.draw(new Line2D.Double(awb.block, baseLineY-waveHeight, 10, baseLineY-waveHeight));
+			g2.draw(new Line2D.Double(awb.block, baseLineY+waveHeight, 10, baseLineY+waveHeight));
+
+			//paint zero-line
+			g2.setColor(Color.gray);
+			g2.draw(new Line2D.Float(awb.block, baseLineY, 10, baseLineY));
+
 		} //end for every block avg
 
-		//paint zero-line on top for each channel
-		for(int i=0;i<m.props.getChannels();i++)
-		{
-			//baseLineY=(int)( (2*(i+1)-1) * waveHeightMax);
-			baseLineY=( (2*(i+1)-1) * waveHeightMax );
 
-			g2.setColor(Color.gray);
-			g2.draw(new Line2D.Float(0, baseLineY, m.width, baseLineY));
-		}
 	}//end paintComponent
 
 //=======================================================
