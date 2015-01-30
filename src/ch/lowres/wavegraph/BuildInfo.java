@@ -4,11 +4,11 @@ public class BuildInfo
 {
 	public static String get()
 	{
-		return "date: Fri Jan 30 08:58:13 CET 2015\nuname -m -o: x86_64 GNU/Linux\njavac -version: javac 1.7.0_65\njavac Options:  -source 1.6 -target 1.6\ngit rev-parse HEAD: 1e127680e11bdb7e69148849ee1a531a2a92efce";
+		return "date: Fri Jan 30 09:41:37 CET 2015\nuname -s -p: Linux x86_64\njavac -version: javac 1.7.0_65\njavac Options:  -source 1.6 -target 1.6\ngit rev-parse HEAD: a9f7c8f596603cfa3d85d671daea3dd342cfea4d";
 	}
 	public static String getGitCommit()
 	{
-		return "1e127680e11bdb7e69148849ee1a531a2a92efce";
+		return "a9f7c8f596603cfa3d85d671daea3dd342cfea4d";
 	}
 	public static void main(String[] args)
 	{
