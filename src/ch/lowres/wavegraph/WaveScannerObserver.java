@@ -56,7 +56,7 @@ public class WaveScannerObserver implements Observer
 				m.width=((WaveScanner)o).getOutputWidth();
 
 				m.viewPortInfoLabel1.setText(
-					+m.df.format(m.scanner.getBlockSize())+" FPP, "
+					m.df.format(m.scanner.getBlockSize())+" FPP, "
 					+m.df.format(m.width)
 			                +" Pixels"
 				);
