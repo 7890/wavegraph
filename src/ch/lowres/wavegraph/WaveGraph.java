@@ -127,7 +127,7 @@ needs special treatment for extrema (peaks, start, end)
 			clearDue=false;
 		}
 
-		if(!m.props.isValid())
+		if(m.props==null || !m.props.isValid())
 		{
 			return;
 		}
