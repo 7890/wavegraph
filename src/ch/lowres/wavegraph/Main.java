@@ -151,7 +151,7 @@ public class Main //implements Observer
 		df3.setDecimalFormatSymbols(symbols3);
 
 		applicationMenu=new AppMenu(this);
-		createGUI(file);
+		createGUI();
 		addListeners();
 		updateTimer.setInitialDelay(40);
 
@@ -191,6 +191,7 @@ public class Main //implements Observer
 //=======================================================
 	public static void resetAllLabels()
 	{
+		mainframe.setTitle(progName);
 		genericInfoLabel.setText("");
 		durationLabel.setText("");
 		scanProgressLabel.setText("(No File)");;
@@ -234,6 +235,8 @@ public class Main //implements Observer
 			updateGenericInfoLabel();
 			updateViewportLabel();
 
+			mainframe.setTitle(progName+" - "+currentFile);
+
 			//some auto logic for now
 			//target size for whole file: 4 x windowWidth
 			//only natural / exact, >=1 FPP frames per pixel value possible
@@ -256,10 +259,10 @@ public class Main //implements Observer
 	}//end processFile
 
 //=======================================================
-	private static void createGUI(String file)
+	private static void createGUI()
 	{
 		mainframe.setIconImage(appIcon);
-		mainframe.setTitle(progName+" - "+file);
+		mainframe.setTitle(progName);
 		mainframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainframe.setJMenuBar(applicationMenu);
 		mainframe.setLayout(new BorderLayout());
