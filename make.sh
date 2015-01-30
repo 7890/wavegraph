@@ -21,7 +21,7 @@ package_path=ch/lowres/wavegraph
 function create_build_info()
 {
 	now="`date`"
-	uname="`uname -m -o`"
+	uname="`uname -s -p`"
 	jvm="`javac -version 2>&1 | head -1 | sed 's/"/''/g'`"
 	javac_opts=" -source $jsource -target $jtarget"
 	git_head_commit_id="`git rev-parse HEAD`"
@@ -33,7 +33,7 @@ public class BuildInfo
 {
 	public static String get()
 	{
-		return "date: $now\nuname -m -o: $uname\njavac -version: $jvm\njavac Options: $javac_opts\ngit rev-parse HEAD: $git_head_commit_id";
+		return "date: $now\nuname -s -p: $uname\njavac -version: $jvm\njavac Options: $javac_opts\ngit rev-parse HEAD: $git_head_commit_id";
 	}
 	public static String getGitCommit()
 	{
@@ -65,7 +65,7 @@ function compile_wavegraph()
 	fi
 
 	echo "start with:"
-	echo "java -Xms1024m -cp .:build/classes/ ch.lowres.wavegraph.Main"
+	echo "java -Xms1024m -Xmx1024m -cp .:build/classes/ ch.lowres.wavegraph.Main"
 }
 
 #========================================================================
@@ -99,14 +99,14 @@ function build_jar
 	mv wavegraph_"$now".jar "$build"
 
 	echo "start with"
-	echo "java -Xms1024m -jar build/wavegraph_$now.jar"
+	echo "java -Xms1024m -Xmx1024m -jar build/wavegraph_$now.jar"
 
 #osx:
 #-Xdock:name="Wavegraph"
 
 	#start now
 	cd "$cur"
-	java -Xms1024m -jar build/wavegraph_$now.jar
+	java -Xms1024m -Xmx1024m -jar build/wavegraph_$now.jar
 
 	echo "build_jar done."
 }
