@@ -61,6 +61,10 @@ public class Main //implements Observer
 	public static JLabel viewPortInfoLabelTimeFrom=new JLabel("");
 	public static JLabel viewPortInfoLabelTimeTo=new JLabel("");
 
+
+	public static JLabel mousePositionInGraph=new JLabel("");
+
+
 	//filedialog "recently used" doesn't work in jre ~< 8
 	public static FileDialog openFileDialog=new FileDialog(mainframe, "Select RIFF Wave File to Graph", FileDialog.LOAD);
 
@@ -206,6 +210,8 @@ public class Main //implements Observer
 		viewPortInfoLabelTimeWidth.setText("");
 		viewPortInfoLabelTimeFrom.setText("");
 		viewPortInfoLabelTimeTo.setText("");
+
+		viewPortInfoLabelTimeWidth.setText("");
 	}
 
 //=======================================================
@@ -238,7 +244,7 @@ public class Main //implements Observer
 			//some auto logic for now
 			//target size for whole file: 4 x windowWidth
 			//only natural / exact, >=1 FPP frames per pixel value possible
-			width=windowWidth*8;
+			width=windowWidth*256;
 
 			//resolution greater than 1 sample per pixel missing
 			if(width>props.getFrameCount())
@@ -300,6 +306,8 @@ public class Main //implements Observer
 		infoPanelBottom.add(viewPortInfoLabelTimeWidth);
 		infoPanelBottom.add(viewPortInfoLabelTimeFrom);
 		infoPanelBottom.add(viewPortInfoLabelTimeTo);
+
+		infoPanelBottom.add(mousePositionInGraph);;
 
 		infoPanel.setBackground(new Color(215,215,215));
 		infoPanelBottom.setBackground(new Color(215,215,215));
