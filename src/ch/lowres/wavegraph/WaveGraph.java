@@ -17,7 +17,7 @@ import javax.imageio.*;
 import java.text.*;
 
 //=======================================================
-public class WaveGraph extends JPanel
+public class WaveGraph extends JPanel implements MouseMotionListener, MouseListener
 {
 	private static Main m;
 
@@ -33,11 +33,28 @@ public class WaveGraph extends JPanel
 	private boolean drawFull=false;
 	private boolean suppressRepaint=false;
 
+	//primitive, single range
+	//0: press 1: current drag end, release 2: current mouse
+	private Point[] positions=new Point[3];
+	private boolean mousePressed=false;
+	private boolean dragOngoing=false;
+
+	private final static Stroke stroke1=new BasicStroke(1);
+	private final static Stroke stroke2=new BasicStroke(2);
+	private final static Stroke stroke35=new BasicStroke(35);
+
 //=======================================================
 	public WaveGraph()
 	{
 		this.setOpaque(true);
 		this.setBackground(new Color(243,243,243));
+
+		positions[0]=new Point(0,0);
+		positions[1]=new Point(0,0);
+		positions[2]=new Point(0,0);
+
+		addMouseListener(this);
+		addMouseMotionListener(this);
 	}
 
 //=======================================================
@@ -61,7 +78,7 @@ public class WaveGraph extends JPanel
 			{
 				repaint();
 			}
-  		});
+		});
 	}
 
 //=======================================================
@@ -102,22 +119,10 @@ middle=max-((max-min)/2)
     |?_______0
 
 lookahead 1 segement to connect middle to middle
-
-vgap=Math.min(c1,c2)
-line=x, middle, x+0.5, max+vgap/2
-needs special treatment for extrema (peaks, start, end)
-
-       |
-       |s2
-       |_____
-          ^
-          | vgap
-  ________.___
-  |
-  |s1
-
 */
-		super.paintComponent(g);
+
+/////
+//		super.paintComponent(g);
 
 		//remove all in viewport
 		if(clearDue)
@@ -133,10 +138,11 @@ needs special treatment for extrema (peaks, start, end)
 
 		if(suppressRepaint)
 		{
+			//m.p("repaint was suppressed");
 			final Graphics2D g2 = (Graphics2D) g;
 
 			g2.setColor(Color.gray);
-			g2.setStroke(new BasicStroke(35));
+			g2.setStroke(stroke35);
 			int h2=m.scrollpane.getHeight()/2;
 			g2.draw(new Line2D.Float(0,h2,getWidth(),h2));
 			return;
@@ -197,9 +203,21 @@ needs special treatment for extrema (peaks, start, end)
 		float waveHeightMax=(float) (( (m.scrollpane.getHeight()-sbHeight*2) /m.props.getChannels()) / 2);
 		waveHeight=waveHeightMax*0.9f;
 
-		float gap=waveHeightMax-waveHeight;
 
-		g2.setStroke(new BasicStroke(1));
+		final BasicStroke strokeChannelBackground = 
+			new BasicStroke(2*waveHeight, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL);
+		g2.setStroke(strokeChannelBackground);
+
+		//draw channel background
+		for(int w=0;w<m.props.getChannels();w++)
+		{
+			baseLineY=( (2*(w+1)-1) * waveHeightMax );
+
+			g2.setColor(new Color(250,250,250));
+			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY, m.scrollOffset+m.visibleRect.getWidth(), baseLineY));
+		}
+
+		g2.setStroke(stroke1);
 
 		AggregatedWaveBlock awb=null;
 		AggregatedWaveBlock next=null;
@@ -233,21 +251,97 @@ needs special treatment for extrema (peaks, start, end)
 			//paint vertical amplitude blocks
 			g2.setColor(Color.black);
 			awb.paint(g2, waveHeight, baseLineY);
-
-			//paint +1/-1 limits
-			g2.setColor(Color.red);
-			g2.draw(new Line2D.Double(awb.block, baseLineY-waveHeight, 10, baseLineY-waveHeight));
-			g2.draw(new Line2D.Double(awb.block, baseLineY-waveHeight, 10, baseLineY-waveHeight));
-			g2.draw(new Line2D.Double(awb.block, baseLineY+waveHeight, 10, baseLineY+waveHeight));
-
-			//paint zero-line
-			g2.setColor(Color.gray);
-			g2.draw(new Line2D.Float(awb.block, baseLineY, 10, baseLineY));
-
 		} //end for every block avg
 
+		//draw on top channel limits, zero lines
+		for(int w=0;w<m.props.getChannels();w++)
+		{
+			baseLineY=( (2*(w+1)-1) * waveHeightMax );
 
+			//1
+			g2.setStroke(stroke1);
+			g2.setColor(Color.black.brighter());
+			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY-waveHeight, m.scrollOffset+m.visibleRect.getWidth(), baseLineY-waveHeight));
+
+			//-1
+			g2.setStroke(stroke2);
+			g2.setColor(Color.gray.darker().darker());
+			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY+waveHeight, m.scrollOffset+m.visibleRect.getWidth(), baseLineY+waveHeight));
+
+			//paint zero-line
+			g2.setStroke(stroke1);
+			g2.setColor(Color.gray);
+			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY, m.scrollOffset+m.visibleRect.getWidth(), baseLineY));
+		}
 	}//end paintComponent
+
+//=======================================================
+	public void mouseMoved(MouseEvent e)
+	{
+		positions[2]=e.getPoint();//mouse
+	//tmp
+		m.mousePositionInGraph.setText("|  Pos "+e.getPoint().x);
+	}
+
+//=======================================================
+	public void mouseDragged(MouseEvent e)
+	{
+		if(mousePressed) //button1
+		{
+			dragOngoing=true;
+			positions[1]=e.getPoint();//current end
+			positions[2]=e.getPoint();//current mouse
+			//repaint();
+		}
+	}
+
+//=======================================================
+	public void mousePressed(MouseEvent e)
+	{
+//		m.p("Mouse pressed; # of clicks: "+ e.getClickCount())+" "+e);
+		if(e.getButton()==e.BUTTON1)
+		{
+			mousePressed=true;
+			positions[0]=e.getPoint();//press
+			positions[1]=e.getPoint();//current end (same)
+			positions[2]=e.getPoint();//current end (same)
+
+			//could be start of drag! but not sure yet
+			//single pixel repaint needed!
+			//repaint();
+		}
+	}
+
+//=======================================================
+	public void mouseReleased(MouseEvent e)
+	{
+//		m.p("released; # of clicks: "+ e.getClickCount()+" "+e);
+		if(e.getButton()==e.BUTTON1)
+		{
+			mousePressed=false;
+			dragOngoing=false;
+			positions[1]=e.getPoint();//end / released
+			//repaint();
+		}
+	}
+
+//=======================================================
+	public void mouseEntered(MouseEvent e)
+	{
+//		m.p("entered "+e);
+	}
+
+//=======================================================
+	public void mouseExited(MouseEvent e)
+	{
+//		m.p("exited "+ e);
+	}
+
+//=======================================================
+	public void mouseClicked(MouseEvent e)
+	{
+//		m.p("clicked (# of clicks: "+ e.getClickCount() + ")"+ e);
+	}
 
 //=======================================================
 	public void saveImage()
