@@ -61,9 +61,7 @@ public class Main //implements Observer
 	public static JLabel viewPortInfoLabelTimeFrom=new JLabel("");
 	public static JLabel viewPortInfoLabelTimeTo=new JLabel("");
 
-
 	public static JLabel mousePositionInGraph=new JLabel("");
-
 
 	//filedialog "recently used" doesn't work in jre ~< 8
 	public static FileDialog openFileDialog=new FileDialog(mainframe, "Select RIFF Wave File to Graph", FileDialog.LOAD);
@@ -219,14 +217,13 @@ public class Main //implements Observer
 	{
 		currentFile=file;
 		scanner.abort();
+		updateTimer.stop();
 		graph.clear();
 		System.gc();
+		width=0;
 		scrollbar.setValue(0);
 
 		resetAllLabels();
-		//makes vertical scrollbar hide
-		width=0;
-		scrollbar.setValue(0);
 
 		try
 		{
@@ -256,16 +253,15 @@ public class Main //implements Observer
 			scanner.scanData(width);
 			//scanner.scanData((long)(props.getFrameCount()/2),(long)(props.getFrameCount()/2),width);
 
-			updateTimer.stop();
-
 			SwingUtilities.invokeLater(new Runnable()
 			{
 				public void run()
 				{
-					graph.repaint();
-					scrollpane.repaint();
+					graph.revalidate();
+					scrollpane.revalidate();
 				}
 			});
+
 		}
 		catch(Exception e)
 		{
@@ -283,6 +279,7 @@ public class Main //implements Observer
 		mainframe.setLayout(new BorderLayout());
 
 		scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		//scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 		scrollpane.setWheelScrollingEnabled(true);
 
@@ -453,7 +450,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				//p(".");
+				p(".");
 				scrollOffset=scrollbar.getValue();
 
 				visibleRect=scrollpane.getViewport().getVisibleRect();
