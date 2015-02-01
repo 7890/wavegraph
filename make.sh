@@ -81,9 +81,10 @@ function build_jar
 	mkdir -p "$classes"/resources/images
 
 	cp "$src"/gfx/wavegraph_icon.png "$classes"/resources/images
+	cp "$src"/gfx/wavegraph_splash_screen.png "$classes"/resources/images
 
 	echo "Manifest-Version: 1.0" > "$build"/Manifest.txt
-#	echo "SplashScreen-Image: resources/images/wavegraph_splash_screen.png" >> "$build"/Manifest.txt
+	echo "SplashScreen-Image: resources/images/wavegraph_splash_screen.png" >> "$build"/Manifest.txt
 	echo "Main-Class: ch.lowres.wavegraph.Main" >> "$build"/Manifest.txt
 	echo "" >> "$build"/Manifest.txt
 

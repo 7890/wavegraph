@@ -115,6 +115,9 @@ public class Main //implements Observer
 		String fileToLoad="";
 
 		//if no file given, show file open dialog (current directory)
+/*
+//don't show dialog at startup by default
+//
 		if(args.length<1)
 		{
 			p("select file in dialog");
@@ -131,7 +134,8 @@ public class Main //implements Observer
 			p("using file given on command line");
 			fileToLoad=new File(args[0]).getAbsolutePath();
 		}
-
+*/
+		//any errors should be catched
 		Main m=new Main(fileToLoad);
 	}
 
