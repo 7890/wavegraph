@@ -122,7 +122,7 @@ lookahead 1 segement to connect middle to middle
 */
 
 /////
-//		super.paintComponent(g);
+		super.paintComponent(g);
 
 		//remove all in viewport
 		if(clearDue)
@@ -292,6 +292,10 @@ lookahead 1 segement to connect middle to middle
 			positions[1]=e.getPoint();//current end
 			positions[2]=e.getPoint();//current mouse
 			//repaint();
+
+			//drag-move on waveform
+			int diff=positions[1].x-positions[0].x;
+			m.scrollbar.setValue(m.scrollbar.getValue()-diff);
 		}
 	}
 
