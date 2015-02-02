@@ -214,7 +214,7 @@ lookahead 1 segement to connect middle to middle
 			baseLineY=( (2*(w+1)-1) * waveHeightMax );
 
 			g2.setColor(Colors.wave_background);
-			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY, m.scrollOffset+m.visibleRect.getWidth(), baseLineY));
+			g2.draw(new Line2D.Double(m.scrollOffset-2000, baseLineY, m.scrollOffset+m.visibleRect.getWidth()+2000, baseLineY));
 		}
 
 		g2.setStroke(stroke1);
@@ -261,17 +261,17 @@ lookahead 1 segement to connect middle to middle
 			//1
 			g2.setStroke(stroke1);
 			g2.setColor(Colors.wave_delimiter_top);
-			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY-waveHeight, m.scrollOffset+m.visibleRect.getWidth(), baseLineY-waveHeight));
+			g2.draw(new Line2D.Double(m.scrollOffset-2000, baseLineY-waveHeight, m.scrollOffset+m.visibleRect.getWidth()+2000, baseLineY-waveHeight));
 
 			//-1
 			g2.setStroke(stroke2);
 			g2.setColor(Colors.wave_delimiter_bottom);
-			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY+waveHeight, m.scrollOffset+m.visibleRect.getWidth(), baseLineY+waveHeight));
+			g2.draw(new Line2D.Double(m.scrollOffset-2000, baseLineY+waveHeight, m.scrollOffset+m.visibleRect.getWidth()+2000, baseLineY+waveHeight));
 
 			//paint zero-line
 			g2.setStroke(stroke1);
 			g2.setColor(Colors.wave_zeroline);
-			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY, m.scrollOffset+m.visibleRect.getWidth(), baseLineY));
+			g2.draw(new Line2D.Double(m.scrollOffset-2000, baseLineY, m.scrollOffset+m.visibleRect.getWidth()+2000, baseLineY));
 		}
 	}//end paintComponent
 
