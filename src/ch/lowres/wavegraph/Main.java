@@ -22,8 +22,9 @@ import javax.swing.plaf.basic.BasicScrollBarUI;
 //=======================================================
 public class Main //implements Observer
 {
-	final static String progName="Wavegraph";
-	final static String progHome="https://github.com/7890/wavegraph";
+	public final static String progName="Wavegraph";
+	public final static String progHome="https://github.com/7890/wavegraph";
+	public final static String progVersion="0.000c";
 
 	public static JFrame mainframe=new JFrame();
 	public static Image appIcon=createImageFromJar("/resources/images/wavegraph_icon.png");
@@ -74,6 +75,8 @@ public class Main //implements Observer
 	public static String lastFileOpenDirectory=os.getHomeDir();
 	public static String currentFile=null;
 	public static boolean haveValidFile=false;
+
+	public static AboutDialog about;
 
 //graph
 	public static long width=0;
@@ -131,6 +134,7 @@ public class Main //implements Observer
 		if(os.isMac())
 		{
 			ctrlOrCmd=InputEvent.META_MASK;
+			Mac.init();
 		}
 
 		DecimalFormatSymbols symbols = df.getDecimalFormatSymbols();
@@ -344,6 +348,8 @@ public class Main //implements Observer
 		windowHeight=(int)((screenDimension.getHeight()-insets.top-insets.bottom)/2);
 
 		mainframe.setSize(windowWidth,windowHeight);
+
+		about=new AboutDialog(mainframe, "About "+progName, true);
 
 		//the main things to do 
 		graph=new WaveGraph();
@@ -713,6 +719,18 @@ public class Main //implements Observer
 			}
 		});
 	}//end addGlobalKeyListeners
+
+//========================================================================
+	public static void setDialogCentered(Dialog d)
+	{
+		Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(d.getGraphicsConfiguration());
+		Dimension screenDimension=Toolkit.getDefaultToolkit().getScreenSize();
+
+		d.setLocation(
+			(int)((screenDimension.getWidth()-insets.left-insets.right-d.getWidth()) / 2),
+			(int)((screenDimension.getHeight()-insets.top-insets.bottom-d.getHeight()) / 2)
+		);
+	}
 
 //========================================================================
 	public static Image createImageFromJar(String imageUriInJar)
