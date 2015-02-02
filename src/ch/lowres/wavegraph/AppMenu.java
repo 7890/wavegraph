@@ -54,11 +54,7 @@ public class AppMenu extends JMenuBar
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				final String fileToLoad=m.showOpenFileDialog();
-				if(fileToLoad!=null)
-				{
-					m.processFile(fileToLoad);
-				}
+				m.processFile(m.showOpenFileDialog());
 				m.mainframe.toFront();
 			}
 		});
