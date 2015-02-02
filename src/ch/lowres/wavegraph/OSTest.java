@@ -81,6 +81,12 @@ public class OSTest
 	}
 
 //========================================================================
+	public static String getHomeDir()
+	{
+		return System.getProperty("user.home");
+	}
+
+//========================================================================
 	public static int getDPI()
 	{
 		return Toolkit.getDefaultToolkit().getScreenResolution();
