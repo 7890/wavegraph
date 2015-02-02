@@ -6,6 +6,7 @@ cur=`pwd`
 
 src="$cur"/src
 build="$cur"/build
+archive="$cur"/archive
 classes="$build"/classes
 doc="$cur"/doc
 
@@ -55,6 +56,10 @@ function compile_wavegraph()
 
 	mkdir -p "$classes"
 
+	#apple extension are stubs used just at compile time on non-osx machines
+	unzip -p "$archive"/AppleJavaExtensions.zip \
+		AppleJavaExtensions/AppleJavaExtensions.jar > "$classes"/AppleJavaExtensions.jar
+
 	javac -source $jsource -target $jtarget -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" "$src"/$package_path/*.java
 
 	ret=$?
@@ -82,6 +87,7 @@ function build_jar
 
 	cp "$src"/gfx/wavegraph_icon.png "$classes"/resources/images
 	cp "$src"/gfx/wavegraph_splash_screen.png "$classes"/resources/images
+	cp "$src"/gfx/wavegraph_about_screen.png "$classes"/resources/images
 
 	echo "Manifest-Version: 1.0" > "$build"/Manifest.txt
 	echo "SplashScreen-Image: resources/images/wavegraph_splash_screen.png" >> "$build"/Manifest.txt
