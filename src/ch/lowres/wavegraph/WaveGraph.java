@@ -47,7 +47,7 @@ public class WaveGraph extends JPanel implements MouseMotionListener, MouseListe
 	public WaveGraph()
 	{
 		this.setOpaque(true);
-		this.setBackground(new Color(243,243,243));
+		setBackground(Colors.wave_canvas_background);
 
 		positions[0]=new Point(0,0);
 		positions[1]=new Point(0,0);
@@ -213,7 +213,7 @@ lookahead 1 segement to connect middle to middle
 		{
 			baseLineY=( (2*(w+1)-1) * waveHeightMax );
 
-			g2.setColor(new Color(250,250,250));
+			g2.setColor(Colors.wave_background);
 			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY, m.scrollOffset+m.visibleRect.getWidth(), baseLineY));
 		}
 
@@ -243,13 +243,13 @@ lookahead 1 segement to connect middle to middle
 					final float top=baseLineY-awb.avg*waveHeight;
 					final float bottom=baseLineY-next.avg*waveHeight;
 
-					g2.setColor(Color.black.brighter());//.brighter().brighter());
+					g2.setColor(Colors.wave_foreground.brighter());
 					g2.draw(new Line2D.Float(bl, top, bl+1, bottom));
 				}
 			}
 
 			//paint vertical amplitude blocks
-			g2.setColor(Color.black);
+			g2.setColor(Colors.wave_foreground);
 			awb.paint(g2, waveHeight, baseLineY);
 		} //end for every block avg
 
@@ -260,17 +260,17 @@ lookahead 1 segement to connect middle to middle
 
 			//1
 			g2.setStroke(stroke1);
-			g2.setColor(Color.black.brighter());
+			g2.setColor(Colors.wave_delimiter_top);
 			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY-waveHeight, m.scrollOffset+m.visibleRect.getWidth(), baseLineY-waveHeight));
 
 			//-1
 			g2.setStroke(stroke2);
-			g2.setColor(Color.gray.darker().darker());
+			g2.setColor(Colors.wave_delimiter_bottom);
 			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY+waveHeight, m.scrollOffset+m.visibleRect.getWidth(), baseLineY+waveHeight));
 
 			//paint zero-line
 			g2.setStroke(stroke1);
-			g2.setColor(Color.gray);
+			g2.setColor(Colors.wave_zeroline);
 			g2.draw(new Line2D.Double(m.scrollOffset, baseLineY, m.scrollOffset+m.visibleRect.getWidth(), baseLineY));
 		}
 	}//end paintComponent
