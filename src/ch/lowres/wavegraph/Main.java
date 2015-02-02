@@ -33,14 +33,15 @@ public class Main //implements Observer
 	public static JScrollPane scrollpane=new JScrollPane();
 	public static JScrollBar scrollbar;
 	public static int scrollbarIncrement=16;
-	public static int scrollOffset=0;
-	public static Rectangle visibleRect=new Rectangle(0,0,0,0);
+	public static int scrollOffset=0; //relative to start of pane / panel
+	public static Rectangle visibleRect=new Rectangle(0,0,0,0); //absolute, viewport
+	public static long lastScrollValue=0;
 
 	public static JPanel infoPanel=new JPanel(new WrapLayout(WrapLayout.LEFT));
 
 	public static JLabel genericInfoLabel=new JLabel("");
 	public static JLabel durationLabel=new JLabel("");
-	public static JLabel scanProgressLabel=new JLabel(" |  0% Scanned");;
+	public static JLabel scanProgressLabel=new JLabel("");// |  0% Scanned");
 	public static JButton buttonAbort=new JButton("Abort Scan")
 	{
 		//make the same height as labels
@@ -63,11 +64,16 @@ public class Main //implements Observer
 
 	public static JLabel mousePositionInGraph=new JLabel("");
 
+	public static int ctrlOrCmd=InputEvent.CTRL_MASK;
+	public static OSTest os=new OSTest();
+
 	//filedialog "recently used" doesn't work in jre ~< 8
 	public static FileDialog openFileDialog=new FileDialog(mainframe, "Select RIFF Wave File to Graph", FileDialog.LOAD);
 
-	public static String lastFileOpenDirectory=System.getProperty("user.dir");
+	//public static String lastFileOpenDirectory=System.getProperty("user.dir");
+	public static String lastFileOpenDirectory=os.getHomeDir();
 	public static String currentFile=null;
+	public static boolean haveValidFile=false;
 
 //graph
 	public static long width=0;
@@ -87,10 +93,6 @@ public class Main //implements Observer
 	public static DecimalFormat df2 = new DecimalFormat("#,###,###,##0.00");
 	public static DecimalFormat df3 = new DecimalFormat("#,000,000,000");
 
-	public static int ctrlOrCmd=InputEvent.CTRL_MASK;
-	public static OSTest os=new OSTest();
-
-	public static long lastScrollValue=0;
 	public static javax.swing.Timer updateTimer=new javax.swing.Timer(-1,null);
 
 //=======================================================
@@ -112,37 +114,19 @@ public class Main //implements Observer
 		p(BuildInfo.get());
 		p("");
 
-		String fileToLoad="";
-
-		//if no file given, show file open dialog (current directory)
-
-//don't show dialog at startup by default
-//
-		if(args.length<1)
-		{
-/*
-			p("select file in dialog");
-
-			fileToLoad=showOpenFileDialog();
-			if(fileToLoad==null)
-			{
-				p("no file selected");
-				//System.exit(1);
-			}
-*/
-		}
-		else
-		{
-			p("using file given on command line");
-			fileToLoad=new File(args[0]).getAbsolutePath();
-		}
-
 		//any errors should be catched
-		Main m=new Main(fileToLoad);
+		Main m=new Main();
+
+		if(args.length>0)
+		{
+			p("using file or directory given on command line");
+			m.processFile(args[0]);
+		}
 	}
 
 //=======================================================
-	public Main(String file)
+//	public Main(String file)
+	public Main()
 	{
 		if(os.isMac())
 		{
@@ -163,13 +147,19 @@ public class Main //implements Observer
 		addListeners();
 		updateTimer.setInitialDelay(40);
 
+		resetAllLabels();
 		mainframe.show();
 
-		processFile(file);
+		//processFile(file);
 	}//end constructor
 
 //=======================================================
 	public static String showOpenFileDialog()
+	{
+		return showOpenFileDialog(lastFileOpenDirectory, currentFile);
+	}
+//=======================================================
+	public static String showOpenFileDialog(String baseDir, String file)
 	{
 		//filter shown files
 		OpenFileFilter filter=new OpenFileFilter();
@@ -177,10 +167,10 @@ public class Main //implements Observer
 		filter.addExtension(".wavex");
 		openFileDialog.setFilenameFilter(filter);
 
-		openFileDialog.setDirectory(lastFileOpenDirectory);
-		if(currentFile!=null)
+		openFileDialog.setDirectory(baseDir);
+		if(file!=null)
 		{
-			openFileDialog.setFile(currentFile);
+			openFileDialog.setFile(file);
 		}
 
 		openFileDialog.setVisible(true);
@@ -202,10 +192,11 @@ public class Main //implements Observer
 		mainframe.setTitle(progName);
 		genericInfoLabel.setText("");
 		durationLabel.setText("");
-		scanProgressLabel.setText("(No File)");;
+		scanProgressLabel.setText("(No File Loaded or unknown File Format)");
 		buttonAbort.setVisible(false);
 
-		viewPortInfoLabel1.setText("");
+		//force bottom panel to have size as with labels
+		viewPortInfoLabel1.setText("Open File via Menu or Drag & Drop in Window");
 
 		viewPortInfoLabelPixelsWidth.setText("");
 		viewPortInfoLabelPixelsFrom.setText("");
@@ -216,28 +207,55 @@ public class Main //implements Observer
 		viewPortInfoLabelTimeTo.setText("");
 
 		viewPortInfoLabelTimeWidth.setText("");
+
+		mousePositionInGraph.setText("");
 	}
 
 //=======================================================
 	public static void processFile(String file)
 	{
-		currentFile=file;
-		scanner.abort();
-		updateTimer.stop();
-		graph.clear();
-		System.gc();
-		width=0;
-		scrollbar.setValue(0);
-
-		resetAllLabels();
+		if(file==null || file.equals(""))
+		{
+			return;
+		}
 
 		try
 		{
+			if(new File(file).isDirectory())
+			{
+				String tmp=showOpenFileDialog(new File(file).getAbsolutePath(),null);
+				if(tmp==null)
+				{
+					return;
+				}
+				else
+				{
+					currentFile=new File(tmp).getAbsolutePath();
+				}
+			}
+			else
+			{
+				currentFile=new File(file).getAbsolutePath();
+			}
+
+			haveValidFile=false;
+			scanner.abort();
+			updateTimer.stop();
+			graph.clear();
+			System.gc();
+			width=0;
+			scrollbar.setValue(0);
+			resetAllLabels();
+
 			props=scanner.getProps(currentFile);
 			if(!props.isValid())
 			{
+				currentFile=null;
+				haveValidFile=false;
 				return;
 			}
+
+			haveValidFile=true;
 
 			updateGenericInfoLabel();
 			updateViewportLabel();
@@ -247,7 +265,7 @@ public class Main //implements Observer
 			//some auto logic for now
 			//target size for whole file: 4 x windowWidth
 			//only natural / exact, >=1 FPP frames per pixel value possible
-			width=windowWidth*256;
+			width=windowWidth*128;
 
 			//resolution greater than 1 sample per pixel missing
 			if(width>props.getFrameCount())
@@ -340,6 +358,8 @@ public class Main //implements Observer
 //========================================================================
 	public static void updateGenericInfoLabel()
 	{
+		//p("update generic info label");
+
 		String channelLabel="";
 		if(props.getChannels()==1)
 		{
@@ -367,6 +387,7 @@ public class Main //implements Observer
 //========================================================================
 	public static void updateViewportLabel()
 	{
+		//p("update viewport label");
 
 /*		viewPortInfoLabel2.setText(" |  Viewport: "+df.format(visibleRect.getWidth())
 		+" / "+df.format(width)
@@ -403,6 +424,7 @@ public class Main //implements Observer
 				(long)(scrollOffset*scanner.getBlockSize()))
 		);
 
+
 		//show "real" end if scroller at max (or graph less wide than window)
 		if(
 			scrollOffset+visibleRect.getWidth()>=scrollbar.getMaximum())
@@ -422,7 +444,7 @@ public class Main //implements Observer
 					(long)((scrollOffset+visibleRect.getWidth())*scanner.getBlockSize()))
 			);
 		}
-	}
+	}//end updateViewportLabel
 
 //========================================================================
 	private static void addListeners()
@@ -440,33 +462,41 @@ public class Main //implements Observer
 		{
 			public void componentResized(ComponentEvent evt)
 			{
-				Component c = (Component)evt.getSource();
-				//p("resized");
-				updateTimer.stop();
+				if(haveValidFile)
+				{
 
-				graph.suppressRepaint(true);
-				graph.setVisible(false);
+					Component c = (Component)evt.getSource();
+					//p("resized");
+					updateTimer.stop();
 
-				updateTimer.setInitialDelay(200);
-				updateTimer.restart();
+					graph.suppressRepaint(true);
+					graph.setVisible(false);
+
+					updateTimer.setInitialDelay(200);
+					updateTimer.restart();
+				}
 			}
 		});
 
+		//
 		updateTimer.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				p(".");
-				scrollOffset=scrollbar.getValue();
+				if(haveValidFile)
+				{
+					//p(".");
+					scrollOffset=scrollbar.getValue();
 
-				visibleRect=scrollpane.getViewport().getVisibleRect();
+					visibleRect=scrollpane.getViewport().getVisibleRect();
 
-				updateViewportLabel();
+					updateViewportLabel();
 
-				graph.suppressRepaint(false);
-				graph.setVisible(true);
-				scrollpane.repaint();
-				updateTimer.stop();
+					graph.suppressRepaint(false);
+					graph.setVisible(true);
+					scrollpane.repaint();
+					updateTimer.stop();
+				}
 			}//end actionPerformed	
 		});//end addActionListener to updateTimer
 
@@ -479,6 +509,7 @@ public class Main //implements Observer
 //=======================================================
 	private static void addScrollbarListener()
 	{
+		//scrollbar shouldn't be visible when no file is loaded
 		scrollbar.addAdjustmentListener(new AdjustmentListener()
 		{
 			public void adjustmentValueChanged(AdjustmentEvent e)
@@ -530,10 +561,15 @@ public class Main //implements Observer
 					evt.acceptDrop(DnDConstants.ACTION_COPY);
 					java.util.List<File> droppedFiles = 
 						(java.util.List<File>) evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+
 					for (File file : droppedFiles)
 					{
 						p("drag+drop event: "+file.getAbsolutePath());
 						processFile(file.getAbsolutePath());
+						mainframe.toFront();
+						buttonAbort.requestFocus();
+						//only first
+						break;
 					}
 				}catch(Exception ex)
 				{

@@ -275,12 +275,17 @@ lookahead 1 segement to connect middle to middle
 		}
 	}//end paintComponent
 
+///need global var to suppress mouse processing
+
 //=======================================================
 	public void mouseMoved(MouseEvent e)
 	{
 		positions[2]=e.getPoint();//mouse
-	//tmp
-		m.mousePositionInGraph.setText("|  Pos "+e.getPoint().x);
+		//tmp
+		if(m.haveValidFile)
+		{
+			m.mousePositionInGraph.setText("|  Pos "+e.getPoint().x);
+		}
 	}
 
 //=======================================================
