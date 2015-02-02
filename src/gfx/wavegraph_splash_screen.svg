@@ -60,7 +60,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -97,7 +97,7 @@
            style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Nimbus Sans L;-inkscape-font-specification:Nimbus Sans L" /></flowRegion><flowPara
          id="flowPara4676">Wavegraph Starting...</flowPara></flowRoot>    <g
        id="g4092"
-       transform="translate(-103.14286,-1.1e-5)">
+       transform="translate(-97.14286,-1.1e-5)">
       <g
          id="g4078">
         <rect
@@ -186,7 +186,7 @@
       </g>
     </g>
     <g
-       transform="matrix(2.4504754,0,0,2.4504754,-454.28629,-596.73271)"
+       transform="matrix(2.4504754,0,0,2.4504754,-448.28629,-596.73271)"
        id="layer1-7-5"
        inkscape:label="Layer 1">
       <rect
@@ -274,7 +274,7 @@
     </g>
     <g
        id="g4107"
-       transform="translate(85.303589,-1.1e-5)">
+       transform="translate(91.303589,-1.1e-5)">
       <rect
          ry="39.218887"
          y="354.56238"
