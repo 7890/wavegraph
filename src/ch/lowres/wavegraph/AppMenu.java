@@ -15,6 +15,9 @@ public class AppMenu extends JMenuBar
 	private static JMenuItem mi_save_image=new JMenuItem("Save As Image...");
 	private static JMenuItem mi_quit=new JMenuItem("Quit");
 
+	private static JMenu menu_help=new JMenu("Help");
+	private static JMenuItem mi_about=new JMenuItem("About...");
+
 	private Main m;
 
 //=======================================================
@@ -42,9 +45,14 @@ public class AppMenu extends JMenuBar
 //		menu_main.add(mi_save_image);
 		menu_main.add(new JSeparator());
 		menu_main.add(mi_quit);
-
 		menu_main.setMnemonic('F');
+
 		add(menu_main);
+
+		menu_help.add(mi_about);
+		menu_help.setMnemonic('H');
+		add(menu_help);
+
 	}//end createMenu
 
 //=======================================================
@@ -73,6 +81,15 @@ public class AppMenu extends JMenuBar
 			{
 				System.exit(0);
 			}
+		});
+
+		mi_about.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				m.about.updateText();
+				m.about.setVisible(true);
+                        }
 		});
 	}//end addActionListeners
 }//end class AppMenu
