@@ -102,8 +102,9 @@ The remaining 14 bytes contain a fixed string, "
 		tail[13]=(byte)0x71;
 	}//end constructor
 
+
 //=======================================================
-	public boolean read(String file)
+	public void reset()
 	{
 		//reset values
 		filesize=0; // total file size
@@ -123,6 +124,14 @@ The remaining 14 bytes contain a fixed string, "
 		waveFormat="N/A";
 		isValid=false;
 
+		selectFile="";
+	}
+
+//=======================================================
+	public boolean read(String file)
+	{
+		//reset values
+		reset();
 		selectFile=file;
 
 		StringBuffer txtbuf=new StringBuffer();
