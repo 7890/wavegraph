@@ -87,7 +87,6 @@ public class AppMenu extends JMenuBar
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				m.about.updateText();
 				m.about.setVisible(true);
                         }
 		});

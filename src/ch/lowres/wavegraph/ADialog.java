@@ -55,7 +55,7 @@ public abstract class ADialog extends JDialog
 
 		tta=new TransparentTextArea();
 		tta.setContentType("text/html");
-//		tta.setFont(f.fontNormal);
+		//tta.setFont(f.fontNormal);
 		tta.setText("");
 		tta.setEditable(false);
 
@@ -64,15 +64,12 @@ public abstract class ADialog extends JDialog
 		button_close.setFocusable(false);
 		button_close.setMnemonic('C');
 
-		spacer=new JPanel();
-		form.add(spacer,BorderLayout.CENTER);
 		form.add(button_close,BorderLayout.SOUTH);
 
 		decorate();
 
-		pack();
-		g.setDialogCentered(this);
 		setResizable(false);
+		updateText();
 
 		//done in calling object
 		//setVisible(true);
@@ -85,7 +82,6 @@ public abstract class ADialog extends JDialog
 	public void updateText()
 	{
 		tta.setText(getHtml());
-		tta.setSize(100,2000);
 		pack();
 		g.setDialogCentered(this);
 	}

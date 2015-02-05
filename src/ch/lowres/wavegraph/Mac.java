@@ -27,7 +27,6 @@ public class Mac
 				//javax.swing.JOptionPane.showMessageDialog(null, "hello");
 				if(g.about!=null)
 				{
-					g.about.updateText();
 					g.about.setVisible(true);
 				}
 			}
