@@ -36,7 +36,7 @@ public class WaveScannerObserver implements Observer
 					m.scanProgressLabel.setText(" |  "+percent+"% Scanned");
 
 					m.infoPanel.repaint();
-					m.graph.repaint();
+					m.graph.repaintWhileLoading(val);
 
 					updateCounter=0;
 				}
