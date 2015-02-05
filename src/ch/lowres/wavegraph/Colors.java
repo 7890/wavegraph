@@ -25,6 +25,9 @@ public class Colors
 
 	public static Color wave_zeroline=gray;
 
+	public static Color wave_grid=new Color(215,215,255);
+	public static Color canvas_grid=wave_grid.darker();
+
 	public static Color wave_canvas_background=new Color(222,222,222);
 
 /*
