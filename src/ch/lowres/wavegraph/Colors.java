@@ -30,38 +30,12 @@ public class Colors
 
 	public static Color wave_canvas_background=new Color(222,222,222);
 
+	public static Color labelgroup_background=Colors.black.brighter();
+	public static Color labelgroup_foreground=Colors.white.darker();
+
+	public static Color infopanel_background=new Color(215,215,215);
+
 /*
-	//forms
-	public static Color form_background=new Color(38,38,42);
-	public static Color form_foreground=new Color(200,200,200);
-
-	//textfields, lists
-	public static Color input_background=new Color(230,230,233);
-	public static Color input_foreground=new Color(1,2,3);
-
-	//buttons
-	public static Color button_background=new Color(240,140,100);
-	public static Color button_foreground=new Color(22,12,2);
-
-	//status bar
-	public static Color status_background=new Color(20,220,20);
-	public static Color status_foreground=new Color(0,0,0);
-
-	public static Color status_error_background=red;
-	public static Color status_error_foreground=white;
-
-	//focused widget outline
-	public static Color status_focused_outline=new Color(200,200,255);
-
-	//hovered widget overlay
-	public static Color hovered_overlay=new Color(150,160,240);
-
-	//selected text (selection color)
-	public static Color selected_text=new Color(200,200,255);
-
-	//disabled text in fields
-	public static Color disabled_text=gray;
-
 	//ListDialog
 	public static Color list_background=white;
 	public static Color list_foreground=black;
