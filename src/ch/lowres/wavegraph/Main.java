@@ -5,7 +5,6 @@ package ch.lowres.wavegraph;
 import java.awt.*;
 import java.awt.image.*;
 import java.awt.event.*;
-import java.awt.geom.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.*;
 
@@ -42,7 +41,7 @@ public class Main //implements Observer
 
 	public static JLabel genericInfoLabel=new JLabel("");
 	public static JLabel durationLabel=new JLabel("");
-	public static JLabel scanProgressLabel=new JLabel("");// |  0% Scanned");
+	public static JLabel scanProgressLabel=new JLabel("");
 	public static JButton buttonAbort=new JButton("Abort Scan")
 	{
 		//make the same height as labels
@@ -52,27 +51,29 @@ public class Main //implements Observer
 		}
 	};
 
-	public static JPanel infoPanelBottom=new JPanel(new WrapLayout(WrapLayout.LEFT));
+	public static JPanel infoPanelBottom=new JPanel(new WrapLayout(WrapLayout.RIGHT));
+
+	public static JPanel infoPanelBottomMasterGroup=new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+	public static JPanel infoPanelBottomGroup0=new JPanel(new GridLayout(3,1));
 	public static JLabel viewPortInfoLabel1=new JLabel("");
-
-	public static JLabel viewPortInfoLabelPixelsWidth=new JLabel("");
-	public static JLabel viewPortInfoLabelPixelsFrom=new JLabel("");
-	public static JLabel viewPortInfoLabelPixelsTo=new JLabel("");
-
-	public static JLabel viewPortInfoLabelTimeWidth=new JLabel("");
-	public static JLabel viewPortInfoLabelTimeFrom=new JLabel("");
-	public static JLabel viewPortInfoLabelTimeTo=new JLabel("");
-
 	public static JLabel mousePositionInGraph=new JLabel("");
+
+	public static JPanel infoPanelBottomGroup1=new JPanel(new GridLayout(4,1));
+	public static JLabel viewPortInfoLabelPixelsFrom=new JLabel("",JLabel.CENTER);
+	public static JLabel viewPortInfoLabelPixelsTo=new JLabel("",JLabel.CENTER);
+	public static JLabel viewPortInfoLabelPixelsWidth=new JLabel("",JLabel.CENTER);
+	public static JLabel infoPanelBottomGroup1Caption=new JLabel("Viewport Pixels",JLabel.CENTER);
+
+	public static JPanel infoPanelBottomGroup2=new JPanel(new GridLayout(4,1));
+	public static JLabel viewPortInfoLabelTimeFrom=new JLabel("",JLabel.CENTER);
+	public static JLabel viewPortInfoLabelTimeTo=new JLabel("",JLabel.CENTER);
+	public static JLabel viewPortInfoLabelTimeWidth=new JLabel("",JLabel.CENTER);
+	public static JLabel infoPanelBottomGroup2Caption=new JLabel("Viewport H:M:S",JLabel.CENTER);
 
 	public static int ctrlOrCmd=InputEvent.CTRL_MASK;
 	public static OSTest os=new OSTest();
 
-	//filedialog "recently used" doesn't work in jre ~< 8
-	public static FileDialog openFileDialog=new FileDialog(mainframe, "Select RIFF Wave File to Graph", FileDialog.LOAD);
-
-	//public static String lastFileOpenDirectory=System.getProperty("user.dir");
-	public static String lastFileOpenDirectory=os.getHomeDir();
 	public static String currentFile=null;
 	public static boolean haveValidFile=false;
 
@@ -160,35 +161,14 @@ public class Main //implements Observer
 //=======================================================
 	public static String showOpenFileDialog()
 	{
-		return showOpenFileDialog(lastFileOpenDirectory, currentFile);
+		return showOpenFileDialog(null, currentFile);
 	}
+
 //=======================================================
 	public static String showOpenFileDialog(String baseDir, String file)
 	{
-		//filter shown files
-		OpenFileFilter filter=new OpenFileFilter();
-		filter.addExtension(".wav");
-		filter.addExtension(".wavex");
-		openFileDialog.setFilenameFilter(filter);
-
-		openFileDialog.setDirectory(baseDir);
-		if(file!=null)
-		{
-			openFileDialog.setFile(file);
-		}
-
-		openFileDialog.setVisible(true);
-
-		if(openFileDialog.getFile() == null || openFileDialog.getDirectory() == null)
-		{
-			return null;
-		}
-
-		//remember for next open
-		lastFileOpenDirectory=openFileDialog.getDirectory();
-
-		return lastFileOpenDirectory+openFileDialog.getFile();
-	}
+		return AFileChooser.showOpenFileDialog(baseDir, file);
+	}//end showOpenFileDialog
 
 //=======================================================
 	public static void resetAllLabels()
@@ -200,19 +180,18 @@ public class Main //implements Observer
 		buttonAbort.setVisible(false);
 
 		//force bottom panel to have size as with labels
-		viewPortInfoLabel1.setText("Open File via Menu or Drag & Drop in Window");
+		viewPortInfoLabel1.setText("");//Open File via Menu or Drag & Drop in Window");
+		mousePositionInGraph.setText("");
 
-		viewPortInfoLabelPixelsWidth.setText("");
 		viewPortInfoLabelPixelsFrom.setText("");
 		viewPortInfoLabelPixelsTo.setText("");
+		viewPortInfoLabelPixelsWidth.setText("");
 
-		viewPortInfoLabelTimeWidth.setText("");
 		viewPortInfoLabelTimeFrom.setText("");
 		viewPortInfoLabelTimeTo.setText("");
-
 		viewPortInfoLabelTimeWidth.setText("");
 
-		mousePositionInGraph.setText("");
+		viewPortInfoLabelTimeWidth.setText("");
 	}
 
 //=======================================================
@@ -228,6 +207,10 @@ public class Main //implements Observer
 			if(new File(file).isDirectory())
 			{
 				String tmp=showOpenFileDialog(new File(file).getAbsolutePath(),null);
+
+				mainframe.toFront();
+				buttonAbort.requestFocus();
+
 				if(tmp==null)
 				{
 					return;
@@ -243,6 +226,8 @@ public class Main //implements Observer
 			}
 
 			haveValidFile=false;
+			infoPanelBottom.setVisible(false);
+
 			scanner.abort();
 			updateTimer.stop();
 			graph.clear();
@@ -260,6 +245,7 @@ public class Main //implements Observer
 			}
 
 			haveValidFile=true;
+			infoPanelBottom.setVisible(true);
 
 			updateGenericInfoLabel();
 			updateViewportLabel();
@@ -315,27 +301,66 @@ public class Main //implements Observer
 		scrollbar.setUnitIncrement(scrollbarIncrement);
 		scrollbar.setUI(new BasicScrollBarUI());
 
+		buttonAbort.setEnabled(false);
+
+		infoPanel.setOpaque(true);
+		infoPanel.setBackground(Colors.infopanel_background);
+
+		infoPanelBottom.setOpaque(true);
+		infoPanelBottom.setBackground(Colors.infopanel_background);
+		infoPanelBottom.setVisible(false);
+
+		infoPanelBottomMasterGroup.setOpaque(false);
+		infoPanelBottomGroup0.setOpaque(false);
+		infoPanelBottomGroup0.setPreferredSize(new Dimension(200,70));
+
+		infoPanelBottomGroup1.setPreferredSize(new Dimension(110,70));
+		infoPanelBottomGroup1Caption.setOpaque(true);
+		infoPanelBottomGroup1Caption.setBackground(Colors.labelgroup_background);
+		infoPanelBottomGroup1Caption.setForeground(Colors.labelgroup_foreground);
+
+		infoPanelBottomGroup2.setPreferredSize(new Dimension(110,70));
+		infoPanelBottomGroup2Caption.setOpaque(true);
+		infoPanelBottomGroup2Caption.setBackground(Colors.labelgroup_background);
+		infoPanelBottomGroup2Caption.setForeground(Colors.labelgroup_foreground);
+
+		JPanel spacer=new JPanel(new GridLayout(3,1));
+		spacer.add(new JLabel(" "));
+		spacer.add(new JLabel(" "));
+		spacer.add(new JLabel(" "));
+		spacer.setOpaque(false);
+
 		infoPanel.add(genericInfoLabel);
 		infoPanel.add(durationLabel);
 		infoPanel.add(scanProgressLabel);
 		infoPanel.add(buttonAbort);
 
-		buttonAbort.setEnabled(false);
+		infoPanelBottomGroup0.add(viewPortInfoLabel1);
+		infoPanelBottomGroup0.add(mousePositionInGraph);
 
-		infoPanelBottom.add(viewPortInfoLabel1);
+		infoPanelBottom.add(infoPanelBottomGroup0);
 
-		infoPanelBottom.add(viewPortInfoLabelPixelsWidth);
-		infoPanelBottom.add(viewPortInfoLabelPixelsFrom);
-		infoPanelBottom.add(viewPortInfoLabelPixelsTo);
+		infoPanelBottomGroup1.add(viewPortInfoLabelPixelsFrom);
+		infoPanelBottomGroup1.add(viewPortInfoLabelPixelsTo);
+		infoPanelBottomGroup1.add(viewPortInfoLabelPixelsWidth);
 
-		infoPanelBottom.add(viewPortInfoLabelTimeWidth);
-		infoPanelBottom.add(viewPortInfoLabelTimeFrom);
-		infoPanelBottom.add(viewPortInfoLabelTimeTo);
+		infoPanelBottomGroup1Caption.setFont(new JLabel().getFont().deriveFont(10f));
+		infoPanelBottomGroup1.add(infoPanelBottomGroup1Caption);
 
-		infoPanelBottom.add(mousePositionInGraph);;
+		infoPanelBottomMasterGroup.add(spacer);
+		infoPanelBottomMasterGroup.add(infoPanelBottomGroup1);
 
-		infoPanel.setBackground(new Color(215,215,215));
-		infoPanelBottom.setBackground(new Color(215,215,215));
+		infoPanelBottomGroup2.add(viewPortInfoLabelTimeFrom);
+		infoPanelBottomGroup2.add(viewPortInfoLabelTimeTo);
+		infoPanelBottomGroup2.add(viewPortInfoLabelTimeWidth);
+
+		infoPanelBottomGroup2Caption.setFont(new JLabel().getFont().deriveFont(10f));
+		infoPanelBottomGroup2.add(infoPanelBottomGroup2Caption);
+
+		infoPanelBottomMasterGroup.add(spacer);
+		infoPanelBottomMasterGroup.add(infoPanelBottomGroup2);
+
+		infoPanelBottom.add(infoPanelBottomMasterGroup);
 
 		mainframe.add(infoPanel, BorderLayout.NORTH);
 		mainframe.add(scrollpane, BorderLayout.CENTER);
@@ -400,34 +425,32 @@ public class Main //implements Observer
 		+" Pixels");
 */
 
+		viewPortInfoLabelPixelsFrom.setText(
+			"S: "+
+				df3.format(scrollOffset)
+		);
+
+		viewPortInfoLabelPixelsTo.setText(
+			"E: "+
+				df3.format(scrollOffset+visibleRect.getWidth())
+		);
+
 		viewPortInfoLabelPixelsWidth.setText(
-			"|  "+
+			"L: "+
 				df3.format(
 				(long)visibleRect.getWidth())
 		);
 
-		viewPortInfoLabelPixelsFrom.setText(
-			"|  "+
-				df3.format(scrollOffset
-				)
-		);
-
-		viewPortInfoLabelPixelsTo.setText(
-			"-- "+
-				df3.format(scrollOffset+visibleRect.getWidth()
-				)
+		viewPortInfoLabelTimeFrom.setText(
+			"S: "+
+			props.getDurationString( 
+				(long)(scrollOffset*scanner.getBlockSize()))
 		);
 
 		viewPortInfoLabelTimeWidth.setText(
-			"|  "
-			+props.getDurationString( 
+			"L: "+
+			props.getDurationString( 
 				(long)visibleRect.getWidth()*scanner.getBlockSize())
-		);
-
-		viewPortInfoLabelTimeFrom.setText(
-			"|  "
-			+props.getDurationString( 
-				(long)(scrollOffset*scanner.getBlockSize()))
 		);
 
 
@@ -436,8 +459,8 @@ public class Main //implements Observer
 			scrollOffset+visibleRect.getWidth()>=scrollbar.getMaximum())
 		{
 			viewPortInfoLabelTimeTo.setText(
-				"-- "
-				+props.getDurationString(
+				"E: "+
+				props.getDurationString(
 					(long)(scanner.getCycles()))
 			);
 		}
@@ -445,8 +468,8 @@ public class Main //implements Observer
 		{
 
 			viewPortInfoLabelTimeTo.setText(
-				"-- "
-				+props.getDurationString( 
+				"E: "+
+				props.getDurationString( 
 					(long)((scrollOffset+visibleRect.getWidth())*scanner.getBlockSize()))
 			);
 		}
