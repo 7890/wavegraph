@@ -5,7 +5,10 @@ package ch.lowres.wavegraph;
 import java.io.*;
 import java.util.*;
 
-public class OpenFileFilter implements FilenameFilter 
+//hybrid
+public class OpenFileFilter 
+	extends javax.swing.filechooser.FileFilter
+	implements java.io.FilenameFilter
 {
 	private ArrayList<String> extensions = new ArrayList<String>();
 
@@ -50,4 +53,33 @@ public class OpenFileFilter implements FilenameFilter
 		}
 		return false;
 	}
+
+//=======================================================
+	public boolean accept(File file)
+	{
+		if(extensions.isEmpty())
+		{
+			return true;
+		}
+		if(file.isDirectory())
+		{
+			return true;
+		}
+		//case insensitive
+		for(String ext : extensions)
+		{
+			if(file.getName().toLowerCase().endsWith(ext))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+//=======================================================
+	public String getDescription()
+	{
+		return "Wave Files (.wav)";
+	}
+
 }//end class OpenFileFilter
