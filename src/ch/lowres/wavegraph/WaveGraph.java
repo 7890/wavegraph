@@ -34,10 +34,24 @@ public class WaveGraph extends JPanel implements MouseMotionListener, MouseListe
 	private boolean suppressRepaint=false;
 
 	//primitive, single range
-	//0: press 1: current drag end, release 2: current mouse
-	private Point[] positions=new Point[3];
-	private boolean mousePressed=false;
+	//0: press 1: current range end (mouse), release
+	private Point[] positions=new Point[2];
+	private Point[] positionsCanvasDrag=new Point[2];
+	private Point[] positionsSelectionRange=new Point[2];
+
+	private int temporaryMarker=0;
+
+	//offset of mouse press position to positionsSelection[0]
+	private int offsetToSelectionStart=0;
+
+	private final int DRAG_MOVE_CANVAS=0;
+	private final int DRAG_CREATE_SELECTION=1;
+	private final int DRAG_MOVE_SELECTION=2;
+
+	private int dragType=DRAG_MOVE_CANVAS;
+
 	private boolean dragOngoing=false;
+	private boolean mousePressed=false;
 	private boolean mouseInside=false;
 
 	private final static Stroke stroke1=new BasicStroke(1);
@@ -49,18 +63,23 @@ public class WaveGraph extends JPanel implements MouseMotionListener, MouseListe
 	private long positionsPrev_x=0;
 
 	//handle repaint while scan is ongoing
-	public long firstCounterWhileLoading=0;
-	public boolean waitWithRepaintWhileLoading=false;
+	private long firstCounterWhileLoading=0;
+	private boolean waitWithRepaintWhileLoading=false;
+
+	private Cursor cursor = Cursor.getDefaultCursor();
+
+	//used to draw "into" and re-use if viewport doesn't change
+	private BufferedImage img;
 
 //=======================================================
 	public WaveGraph()
 	{
-		this.setOpaque(true);
-		setBackground(Colors.wave_canvas_background);
+		setOpaque(false);
 
-		positions[0]=new Point(0,0);
-		positions[1]=new Point(0,0);
-		positions[2]=new Point(0,0);
+		JViewport viewport = new GraphViewport();
+		viewport.setView(this);
+		m.scrollpane.setViewport(viewport);
+		resetPositions();
 
 		addMouseListener(this);
 		addMouseMotionListener(this);
@@ -73,6 +92,19 @@ public class WaveGraph extends JPanel implements MouseMotionListener, MouseListe
 	}
 
 //=======================================================
+	public void resetPositions()
+	{
+		positions[0]=new Point(0,0);
+		positions[1]=new Point(0,0);
+
+		positionsCanvasDrag[0]=new Point(0,0);
+		positionsCanvasDrag[1]=new Point(0,0);
+
+		positionsSelectionRange[0]=new Point(0,0);
+		positionsSelectionRange[1]=new Point(0,0);
+	}
+
+//=======================================================
 	public void clear()
 	{
 		//m.p("graph cleared");
@@ -81,6 +113,7 @@ public class WaveGraph extends JPanel implements MouseMotionListener, MouseListe
 		blocks.clear();
 		copy.clear();
 		use.clear();
+		resetPositions();
 		firstCounterWhileLoading=0;
 		waitWithRepaintWhileLoading=false;
 
@@ -94,12 +127,6 @@ public class WaveGraph extends JPanel implements MouseMotionListener, MouseListe
 	}
 
 //=======================================================
-	public void suppressRepaint(boolean b)
-	{
-		suppressRepaint=b;
-	}
-
-//=======================================================
 	public Dimension getPreferredSize()
 	{
 		//Insets insets=Toolkit.getDefaultToolkit().getScreenInsets(m.mainframe.getGraphicsConfiguration());
@@ -110,27 +137,143 @@ public class WaveGraph extends JPanel implements MouseMotionListener, MouseListe
 		);
 	}
 
-//=======================================================
-	public void repaintWhileLoading(long updateCounter)
-	{
-		if(firstCounterWhileLoading==0)
-		{
-			firstCounterWhileLoading=updateCounter;
-			repaint();
-			return;
-		}
+////all ops need limitation to >=0 <=width values
 
-		if(!waitWithRepaintWhileLoading && updateCounter>m.visibleRect.getWidth())
+//=======================================================
+	public void doubleSelectionRangeRight()
+	{
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
 		{
-			//m.p("updateCounter "+updateCounter+" "+m.visibleRect.getWidth());
-			repaint();
-			waitWithRepaintWhileLoading=true;
+			positionsSelectionRange[1].x+=(positionsSelectionRange[1].x-positionsSelectionRange[0].x);
 		}
+		else
+		{
+			positionsSelectionRange[0].x+=(positionsSelectionRange[0].x-positionsSelectionRange[1].x);
+		}
+		singlePixelChange=true;
+		repaint();
 	}
 
 //=======================================================
-	public void paintComponent(Graphics g)
+	public void halveSelectionRangeRight()
 	{
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			positionsSelectionRange[1].x-=(int)((positionsSelectionRange[1].x-positionsSelectionRange[0].x)/2);
+		}
+		else
+		{
+			positionsSelectionRange[0].x-=(int)((positionsSelectionRange[0].x-positionsSelectionRange[1].x)/2);
+		}
+		singlePixelChange=true;
+		repaint();
+	}
+
+//=======================================================
+	public void doubleSelectionRangeLeft()
+	{
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			positionsSelectionRange[0].x-=(positionsSelectionRange[1].x-positionsSelectionRange[0].x);
+		}
+		else
+		{
+			positionsSelectionRange[1].x-=(positionsSelectionRange[0].x-positionsSelectionRange[1].x);
+		}
+		singlePixelChange=true;
+		repaint();
+	}
+
+//=======================================================
+	public void halveSelectionRangeLeft()
+	{
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			positionsSelectionRange[0].x+=(int)((positionsSelectionRange[1].x-positionsSelectionRange[0].x)/2);
+		}
+		else
+		{
+			positionsSelectionRange[0].x+=(int)((positionsSelectionRange[0].x-positionsSelectionRange[1].x)/2);
+		}
+		singlePixelChange=true;
+		repaint();
+	}
+
+//=======================================================
+	public void nudgeSelectionRangeLeft()
+	{
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			int saveStart=positionsSelectionRange[0].x;
+			positionsSelectionRange[0].x-=(positionsSelectionRange[1].x-positionsSelectionRange[0].x);
+			positionsSelectionRange[1].x=saveStart;
+
+			if(positionsSelectionRange[1].x<=m.scrollOffset)
+			{
+				m.scrollbar.setValue((int)(positionsSelectionRange[1].x-m.visibleRect.getWidth()));
+			}
+			else
+			{
+				singlePixelChange=true;
+				repaint();
+			}
+		}
+		else
+		{
+			int saveStart=positionsSelectionRange[1].x;
+			positionsSelectionRange[1].x-=(positionsSelectionRange[0].x-positionsSelectionRange[1].x);
+			positionsSelectionRange[0].x=saveStart;
+
+			if(positionsSelectionRange[0].x<=m.scrollOffset)
+			{
+				m.scrollbar.setValue((int)(positionsSelectionRange[0].x-m.visibleRect.getWidth()));
+			}
+			else
+			{
+				singlePixelChange=true;
+				repaint();
+			}
+		}
+	}//end nudgeSelectionRangeLeft
+
+//=======================================================
+	public void nudgeSelectionRangeRight()
+	{
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			int saveEnd=positionsSelectionRange[1].x;
+			positionsSelectionRange[1].x+=(positionsSelectionRange[1].x-positionsSelectionRange[0].x);
+			positionsSelectionRange[0].x=saveEnd;
+
+			if(positionsSelectionRange[0].x>=m.scrollOffset+m.visibleRect.getWidth())
+			{
+				m.scrollbar.setValue((int)positionsSelectionRange[0].x);
+			}
+			else
+			{
+				singlePixelChange=true;
+				repaint();
+			}
+		}
+		else
+		{
+			int saveEnd=positionsSelectionRange[0].x;
+			positionsSelectionRange[0].x+=(positionsSelectionRange[0].x-positionsSelectionRange[1].x);
+			positionsSelectionRange[1].x=saveEnd;
+
+			if(positionsSelectionRange[1].x>=m.scrollOffset+m.visibleRect.getWidth())
+			{
+				m.scrollbar.setValue(positionsSelectionRange[1].x);
+			}
+			else
+			{
+				singlePixelChange=true;
+				repaint();
+			}
+		}
+	}//nudgeSelectionRangeRight
+
+
 /*
 1 vertical segement = 1 aggregated waveblock, one pixel wide 
 -> min and max values are represented
@@ -151,64 +294,60 @@ middle=max-((max-min)/2)
 lookahead 1 segement to connect middle to middle
 */
 
-		//m.p("== "+g.getClipBounds().toString());
-		//m.p("single pixel: "+singlePixelChange+" suppress: "+suppressRepaint);
-
-		if(!singlePixelChange)
+//=======================================================
+	public void paintComponent(Graphics g)
+	{
+		//sanity check
+		if(m.props==null || !m.props.isValid() || m.scrollpane==null || m.visibleRect==null || m.visibleRect.getWidth()<1)
 		{
-
-			super.paintComponent(g);
-
+			return;
 		}
+		if(suppressRepaint)
+		{
+			//m.p("repaint was suppressed");
+			return;
+		}
+
+		//super.paintComponent(g);
 
 		//remove all in viewport
 		if(clearDue)
 		{
+			m.p("clear was due");
 			g.clearRect(0,0,getWidth(),getHeight());
 			clearDue=false;
 		}
 
-		if(m.props==null || !m.props.isValid())
+		//expect previously drawn image
+		if(singlePixelChange || 
+			(dragOngoing && 
+				(dragType==DRAG_CREATE_SELECTION 
+				|| dragType==DRAG_MOVE_SELECTION )))
 		{
-			return;
-		}
+			//draw last buffered image here
+			if(img!=null)
+			{
+				g.drawImage(img,m.scrollOffset,0,null);
+			}
 
-		if(suppressRepaint)
-		{
-			//m.p("repaint was suppressed");
-			final Graphics2D g2 = (Graphics2D) g;
-
-			g2.setColor(Color.gray);
-			g2.setStroke(stroke35);
-			int h2=m.scrollpane.getHeight()/2;
-			g2.draw(new Line2D.Float(0,h2,getWidth(),h2));
-
-			return;
-		}
-
-		//expect an already drawn graph, draw on top with xor
-		if(singlePixelChange)
-		{
 			final Graphics2D g2 = (Graphics2D) g;
 			//mouse position / single pixel
 			g2.setXORMode(Colors.wave_foreground);
 			g2.setColor(Colors.wave_background);
+			g2.fillRect(positions[1].x, 0,1, 1000);
+			g2.setPaintMode();
 
-			g2.fillRect(positions[2].x, 0,1, 1000);
-
-			//"reset" previously highlighted mouse pixel
-			g2.fillRect((int)positionsPrev_x, 0,1, 1000);
-			positionsPrev_x=positions[2].x;
+			//marker
+			g2.setColor(Colors.red);
+			g2.fillRect((int)temporaryMarker, 0,1, 1000);
 
 			singlePixelChange=false;
-
-			//done :)
+			//already done :)
 			return;
 		}
 
 		//**************************
 		//create array of waveblocks to display for viewport
-
 		if(!scanDone)
 		{
 			//prevent java.util.ConcurrentModificationException
@@ -274,47 +413,32 @@ lookahead 1 segement to connect middle to middle
 		//****
 		//draw wave
 
-		final Graphics2D g2 = (Graphics2D) g;
+		//draw all to buffered image, consider viewport size changes
+		if(img==null 
+			|| img.getWidth()!=(int)m.visibleRect.getWidth()
+			|| img.getHeight()!=(int)m.visibleRect.getHeight()
+		)
+		{
+			m.p("create new image");
+			img=new BufferedImage(
+				(int)m.visibleRect.getWidth(),
+				(int)m.visibleRect.getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
+		}
 
-		//channels should never be 0 (div zero!)
+		//final Graphics2D g2=(Graphics2D)g;
+		final Graphics2D g2=img.createGraphics();
+
 		float waveHeightMax=(float) (( (m.scrollpane.getHeight()-sbHeight*2) /m.props.getChannels()) / 2);
-		waveHeight=waveHeightMax*0.9f;
-
-		//==scale under wave lanes
-		g2.setStroke(stroke1);
-		g2.setColor(Colors.canvas_grid);
-
-		for(int r=(int)100* (int)(m.scrollOffset/100);r<m.scrollOffset+m.visibleRect.getWidth();r+=100)
-		{
-			g2.draw(new Line2D.Double(r-1, 0, r-1, 1000));
-			g2.draw(new Line2D.Double(r+1, 0, r+1, 1000));
-		}
-
-		//==channel background
-		final BasicStroke strokeChannelBackground = 
-			new BasicStroke(2*waveHeight, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL);
-		g2.setStroke(strokeChannelBackground);
-
-		g2.setColor(Colors.wave_background);
-
-		for(int w=0;w<m.props.getChannels();w++)
-		{
-			baseLineY=( (2*(w+1)-1) * waveHeightMax );
-
-			g2.draw(new Line2D.Double(m.scrollOffset-2000, baseLineY, m.scrollOffset+m.visibleRect.getWidth()+2000, baseLineY));
-		}
-
-		//==scale on top of wave lanes
-		g2.setStroke(stroke1);
-		g2.setColor(Colors.wave_grid);
-
-		for(int r=(int)100* (int)(m.scrollOffset/100);r<m.scrollOffset+m.visibleRect.getWidth();r+=100)
-		{
-			g2.draw(new Line2D.Double(r, 0, r, 1000));
-		}
+		float waveHeight=waveHeightMax*0.95f;
+		float baseLineY=0;
 
 		AggregatedWaveBlock awb=null;
 		AggregatedWaveBlock next=null;
+
+		////
+		g2.setBackground(new Color(255,255,255,0));
+		g2.clearRect(0,0,img.getWidth(),img.getHeight());
 
 		//*************************
 		//main draw loop for blocks
@@ -338,51 +462,189 @@ lookahead 1 segement to connect middle to middle
 					final float bottom=baseLineY-next.avg*waveHeight;
 
 					g2.setColor(Colors.wave_foreground.brighter());
-					g2.draw(new Line2D.Float(bl, top, bl+1, bottom));
+					g2.draw(new Line2D.Float(bl-m.scrollOffset, top, bl+1-m.scrollOffset, bottom));
 				}
 			}
 
 			//==paint vertical amplitude blocks
 			g2.setColor(Colors.wave_foreground);
-			awb.paint(g2, waveHeight, baseLineY);
+			awb.paint(g2, waveHeight, baseLineY, -(float)m.scrollOffset);
 		} //end for every block avg
 
-		//==draw on top channel limits, zero lines
-		for(int w=0;w<m.props.getChannels();w++)
+///test selection locked to viewport
+		g2.setXORMode(Colors.wave_foreground);
+		g2.setColor(Color.yellow);
+		g2.fillRect(100,0,400,2000);
+		g2.setPaintMode();
+
+		//free gfx resources of img Graphics
+		//g2.dispose();
+
+		//put created image to screen
+		g.drawImage(img,m.scrollOffset,0,null);
+
+		Graphics2D g2g=(Graphics2D)g;
+
+		//draw over edit point (not in image)
+		g2g.setColor(Colors.red);
+		g2g.fillRect(temporaryMarker, 0,1, 1000);
+	}//end new paintComponent
+
+//=======================================================
+	public void suppressRepaint(boolean b)
+	{
+		suppressRepaint=b;
+	}
+
+//=======================================================
+	public void repaintWhileLoading(long updateCounter)
+	{
+		if(firstCounterWhileLoading==0)
 		{
-			baseLineY=( (2*(w+1)-1) * waveHeightMax );
-
-			//1
-			g2.setStroke(stroke1);
-			g2.setColor(Colors.wave_delimiter_top);
-			g2.draw(new Line2D.Double(m.scrollOffset-2000, baseLineY-waveHeight, m.scrollOffset+m.visibleRect.getWidth()+2000, baseLineY-waveHeight));
-
-			//-1
-			g2.setStroke(stroke2);
-			g2.setColor(Colors.wave_delimiter_bottom);
-			g2.draw(new Line2D.Double(m.scrollOffset-2000, baseLineY+waveHeight, m.scrollOffset+m.visibleRect.getWidth()+2000, baseLineY+waveHeight));
-
-			//paint zero-line
-			g2.setStroke(stroke1);
-			g2.setColor(Colors.wave_zeroline);
-			g2.draw(new Line2D.Double(m.scrollOffset-2000, baseLineY, m.scrollOffset+m.visibleRect.getWidth()+2000, baseLineY));
+			firstCounterWhileLoading=updateCounter;
+			repaint();
+			return;
 		}
 
-		//==test xor draw a selection range
-		g2.setXORMode(Colors.wave_foreground);
-		g2.setColor(Colors.wave_background);
-		g2.fillRect(m.scrollOffset+100, 0,100, 1000);
+		if(!waitWithRepaintWhileLoading && updateCounter>m.visibleRect.getWidth())
+		{
+			//m.p("updateCounter "+updateCounter+" "+m.visibleRect.getWidth());
+			repaint();
+			waitWithRepaintWhileLoading=true;
+		}
+	}
 
-		g2.setXORMode(Colors.wave_background);
-		g2.setColor(Color.yellow);
-		g2.fillRect(m.scrollOffset+100, 0,100, 1000);
-		//g2.setPaintMode();
-	}//end paintComponent
+//=======================================================
+	private class GraphViewport extends JViewport
+	{
+		public GraphViewport()
+		{
+			setOpaque(false);
+		}
+
+		@Override
+		public void paintComponent(Graphics g)
+		{
+			//sanity check
+			if(m.props==null || !m.props.isValid() || m.scrollpane==null || m.visibleRect==null || m.visibleRect.getWidth()<1)
+			{
+				return;
+			}
+			if(suppressRepaint)
+			{
+				//m.p("repaint was suppressed");
+				return;
+			}
+
+			//super.paintComponent(g);
+
+			//remove all in viewport
+			if(clearDue)
+			{
+				m.p("clear was due");
+				g.clearRect(0,0,getWidth(),getHeight());
+				clearDue=false;
+			}
+
+			//prevent the graph to "slip under" the scrollbar
+			int sbHeight=0;
+			if(m.scrollpane.getHorizontalScrollBar().isVisible())
+			{
+				sbHeight=m.scrollpane.getHorizontalScrollBar().getHeight();
+			}
+
+			//channels should never be 0 (div zero!)
+			float waveHeightMax=(float) (( (m.scrollpane.getHeight()-sbHeight*2) /m.props.getChannels()) / 2);
+			float waveHeight=waveHeightMax*0.95f;
+			float baseLineY=0;
+
+			final Graphics2D g2 = (Graphics2D) g;
+
+			//==scale under wave lanes
+			g2.setStroke(stroke1);
+			g2.setColor(Colors.canvas_grid);
+
+			for(int r=(int)100* (int)(m.scrollOffset/100);r<m.scrollOffset+m.visibleRect.getWidth();r+=100)
+			{
+				g2.draw(new Line2D.Double(r-1-m.scrollOffset, 0, r-1-m.scrollOffset, 1000));
+				g2.draw(new Line2D.Double(r+1-m.scrollOffset, 0, r+1-m.scrollOffset, 1000));
+			}
+
+			//==channel background
+			final BasicStroke strokeChannelBackground = 
+			new BasicStroke(2*waveHeight, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL);
+
+			for(int w=0;w<m.props.getChannels();w++)
+			{
+				baseLineY=( (2*(w+1)-1) * waveHeightMax );
+	
+				g2.setStroke(strokeChannelBackground);
+				g2.setColor(Colors.wave_background);
+				g2.draw(new Line2D.Double(0, baseLineY, getWidth(), baseLineY));
+
+///test "fixed" selection
+				g2.setStroke(strokeChannelBackground);
+				g2.setColor(Color.blue.darker());
+				g2.draw(new Line2D.Double(100, baseLineY, 500, baseLineY));
+				g2.setPaintMode();
+
+//current range selection
+				g2.setStroke(strokeChannelBackground);
+				g2.setColor(new Color(255,180,10));
+				g2.draw(new Line2D.Double(positionsSelectionRange[0].x-m.scrollOffset, baseLineY, positionsSelectionRange[1].x-m.scrollOffset, baseLineY));
+
+				//don't draw wave limits at small height
+				if(waveHeightMax>10)
+				{
+					//1
+					g2.setStroke(stroke1);
+					g2.setColor(Colors.wave_delimiter_top);
+					g2.draw(new Line2D.Double(0, baseLineY-waveHeight, getWidth(), baseLineY-waveHeight));
+
+					//-1
+					g2.setStroke(stroke2);
+					g2.setColor(Colors.wave_delimiter_bottom);
+					g2.draw(new Line2D.Double(0, baseLineY+waveHeight, getWidth(), baseLineY+waveHeight));
+				}
+
+				//paint zero-line
+				g2.setStroke(stroke1);
+				g2.setColor(Colors.wave_zeroline);
+				g2.draw(new Line2D.Double(0, baseLineY, getWidth(), baseLineY));
+
+			}//end for channels
+
+			//==scale over wave lanes
+			g2.setStroke(stroke1);
+			g2.setColor(Colors.canvas_grid.brighter());
+
+			for(int r=(int)100* (int)(m.scrollOffset/100);r<m.scrollOffset+m.visibleRect.getWidth();r+=100)
+			{
+				g2.draw(new Line2D.Double(r-m.scrollOffset, 0, r-m.scrollOffset, 1000));
+				g2.draw(new Line2D.Double(r-m.scrollOffset, 0, r-m.scrollOffset, 1000));
+			}
+
+		}//end paintComponent
+	}//end GraphViewport
 
 //=======================================================
 	public void mouseMoved(MouseEvent e)
 	{
-		positions[2]=e.getPoint();//mouse
+		positions[1]=e.getPoint();
+
+		if(!dragOngoing) //set pointer according to position
+		{
+			if(e.getPoint().y<m.visibleRect.getHeight()/2)
+			{
+				cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR); 
+				setCursor(cursor);
+			}
+			else
+			{
+				cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR); 
+				setCursor(cursor);
+			}
+		}
 
 		if(m.haveValidFile)
 		{
@@ -404,18 +666,54 @@ lookahead 1 segement to connect middle to middle
 //=======================================================
 	public void mouseDragged(MouseEvent e)
 	{
-		if(mousePressed) //button1
+		if(mousePressed) //left button
 		{
 			dragOngoing=true;
-			positions[1]=e.getPoint();//current end
-			positions[2]=e.getPoint();//current mouse
 
-			//drag-move on waveform
-			int diff=positions[1].x-positions[0].x;
-			m.scrollbar.setValue(m.scrollbar.getValue()-diff);
-			//repaint handled via scrollbar
-		}
-	}
+			positions[1]=e.getPoint();
+
+			//if starting click of drag was in top halve
+			if(positionsCanvasDrag[0].y<m.visibleRect.getHeight()/2)
+			{
+				dragType=DRAG_CREATE_SELECTION;
+				positionsSelectionRange[0].x=positions[0].x;
+				positionsSelectionRange[0].y=positions[0].y;
+				positionsSelectionRange[1]=e.getPoint();
+				repaint();
+			}
+			else//bottom halve
+			{
+				//move selection
+				if(e.isShiftDown())
+				{
+					dragType=DRAG_MOVE_SELECTION;
+
+					int diff=positions[1].x-positions[0].x-offsetToSelectionStart;
+					int diff2=positionsSelectionRange[1].x-positionsSelectionRange[0].x;
+
+					positionsSelectionRange[0].x=positions[0].x+diff;
+					positionsSelectionRange[1].x=positionsSelectionRange[0].x+diff2;
+
+					//update to compensate for selection move//!
+					//if shift released but button still pressed, continue normal canvas drag
+					positionsCanvasDrag[0].x=positionsSelectionRange[0].x+offsetToSelectionStart;
+					positionsCanvasDrag[1].x=positionsSelectionRange[0].x+offsetToSelectionStart;
+					repaint();
+				}
+				else //move canvas
+				{
+					dragType=DRAG_MOVE_CANVAS;
+
+					positionsCanvasDrag[1]=e.getPoint();
+
+					int diff=positionsCanvasDrag[1].x-positionsCanvasDrag[0].x;
+					m.scrollbar.setValue(m.scrollbar.getValue()-diff);
+				}
+
+			}//end click in bottom halve
+
+		}//end left button mouse pressed
+	}//end mouseDragged
 
 //=======================================================
 	public void mousePressed(MouseEvent e)
@@ -424,11 +722,27 @@ lookahead 1 segement to connect middle to middle
 		if(e.getButton()==e.BUTTON1)
 		{
 			mousePressed=true;
-			positions[0]=e.getPoint();//press
-			positions[1]=e.getPoint();//current end (same)
-			positions[2]=e.getPoint();//current mouse (same)
 
-			//could be start of drag! but not sure yet
+			offsetToSelectionStart=e.getPoint().x-positionsSelectionRange[0].x;
+
+			positions[0]=e.getPoint();
+			positions[1]=e.getPoint();
+
+			positionsCanvasDrag[0]=e.getPoint();
+			positionsCanvasDrag[1]=e.getPoint();
+
+			if(e.getPoint().y<m.visibleRect.getHeight()/2)
+			{
+				cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR); 
+				setCursor(cursor);
+			}
+			else
+			{
+				cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR); 
+				setCursor(cursor);
+			}
+
+			//could be start of drag or in-place single click, not sure yet
 			//repaint();
 		}
 	}
@@ -441,23 +755,113 @@ lookahead 1 segement to connect middle to middle
 		{
 			mousePressed=false;
 			dragOngoing=false;
-			positions[1]=e.getPoint();//end / released
 
-			singlePixelChange=false;
+			positions[1]=e.getPoint();
+
+			if(dragType==DRAG_CREATE_SELECTION)
+			{
+				positionsSelectionRange[1]=e.getPoint();
+			}
+
+			dragType=DRAG_MOVE_CANVAS;
+
+			//click in place
+			if(positions[0].x==positions[1].x)
+			{
+				temporaryMarker=positions[0].x;
+
+				if(positions[0].y<m.visibleRect.getHeight()/2)
+				{
+					//m.p("click in place on upper halve");
+
+					//trim left (absolute minimum)
+					if(e.isShiftDown())
+					{
+						if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+						{
+							positionsSelectionRange[0].x=positions[0].x;
+						}
+						else
+						{
+							positionsSelectionRange[1].x=positions[0].x;
+						}
+					}
+					//trim right (absolute maximum)
+					else if(isControlOrMetaDown(e))
+					{
+						if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+						{
+							positionsSelectionRange[1].x=positions[0].x;
+						}
+						else
+						{
+							positionsSelectionRange[0].x=positions[0].x;
+						}
+					}
+				}
+				else//bottom halve
+				{
+					//m.p("click in place on lower halve");
+
+					//align absolute minimum
+					int diff=0;
+					if(e.isShiftDown())
+					{
+						if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+						{
+							diff=positions[0].x-positionsSelectionRange[0].x;
+						}
+						else
+						{
+							diff=positions[0].x-positionsSelectionRange[1].x;
+						}
+					}
+					//align absolute maximum
+					else if(isControlOrMetaDown(e))
+					{
+						if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+						{
+							diff=positions[0].x-positionsSelectionRange[1].x;
+						}
+						else
+						{
+							diff=positions[0].x-positionsSelectionRange[0].x;
+						}
+					}
+
+					positionsSelectionRange[0].x+=diff;
+					positionsSelectionRange[1].x+=diff;
+				}//end bottom halve
+			}//end click in place
+
+			if(e.getPoint().y<m.visibleRect.getHeight()/2)
+			{
+				cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR); 
+				setCursor(cursor);
+			}
+			else
+			{
+				cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR); 
+				setCursor(cursor);
+			}
+
+			singlePixelChange=true;
 			repaint();
-		}
-	}
+
+		}//end BUTTON1
+	}//end mouseRelased
 
 //=======================================================
 	public void mouseEntered(MouseEvent e)
 	{
 		//m.p("entered "+e);
 		mouseInside=true;
-		positions[2]=e.getPoint();//current mouse (same)
 
+		///
 		m.mousePositionInGraph.setText("Pos "+m.df.format(e.getPoint().x));
 
-		//singlePixelChange=true;
+		singlePixelChange=false;
+		suppressRepaint=false;
 		repaint();
 	}
 
@@ -467,9 +871,19 @@ lookahead 1 segement to connect middle to middle
 		//m.p("exited "+ e);
 		mouseInside=false;
 		m.mousePositionInGraph.setText("(Mouse outside)");
+	}
 
-		//singlePixelChange=true;
-		//repaint();
+//=======================================================
+	public static boolean isControlOrMetaDown(MouseEvent e)
+	{
+		if(m.os.isMac())
+		{
+			return e.isMetaDown();
+		}
+		else
+		{
+			return e.isControlDown();
+		}
 	}
 
 //=======================================================

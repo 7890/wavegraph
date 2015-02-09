@@ -50,8 +50,13 @@ public class AggregatedWaveBlock
 		}
 	}
 
-//=======================================================
 	public void paint(Graphics2D g2, float waveHeight, float baseLineY)
+	{
+		paint(g2,waveHeight,baseLineY,0);
+	}
+
+//=======================================================
+	public void paint(Graphics2D g2, float waveHeight, float baseLineY, float offsetX)
 	{
 /*
 
@@ -71,6 +76,6 @@ baseLineY---------ampl. 0-----------|-
 			below=above-1;
 		}
 
-		g2.draw(new Line2D.Float(block, below, block, above));
+		g2.draw(new Line2D.Float(block+offsetX, below, block+offsetX, above));
 	}
 }//end class AggregatedWaveBlock

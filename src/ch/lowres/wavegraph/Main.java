@@ -23,7 +23,7 @@ public class Main //implements Observer
 {
 	public final static String progName="Wavegraph";
 	public final static String progHome="https://github.com/7890/wavegraph";
-	public final static String progVersion="0.000c";
+	public final static String progVersion="0.000d";
 
 	public static JFrame mainframe=new JFrame();
 	public static Image appIcon=createImageFromJar("/resources/images/wavegraph_icon.png");
@@ -382,6 +382,8 @@ public class Main //implements Observer
 		scanObserver=new WaveScannerObserver();
 
 		scrollpane.setViewportView(graph);
+		scrollpane.setBackground(Colors.wave_canvas_background);
+
 		//mainframe.pack();
 		//mainframe.show();
 	}//end createGUI
@@ -715,6 +717,66 @@ public class Main //implements Observer
 			public void actionPerformed(ActionEvent e)
 			{
 				scrollbar.setValue(scrollbar.getMaximum());
+			}
+		});
+
+		//'g' double range right
+		KeyStroke keyg = KeyStroke.getKeyStroke('g');
+		actionMap.put(keyg, new AbstractAction("g") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				graph.doubleSelectionRangeRight();
+			}
+		});
+
+		//'f' halve range right
+		KeyStroke keyf = KeyStroke.getKeyStroke('f');
+		actionMap.put(keyf, new AbstractAction("f") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				graph.halveSelectionRangeRight();
+			}
+		});
+
+		//'d' halve range left
+		KeyStroke keyd = KeyStroke.getKeyStroke('d');
+		actionMap.put(keyd, new AbstractAction("d") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				graph.halveSelectionRangeLeft();
+			}
+		});
+
+		//'s' double range left
+		KeyStroke keys = KeyStroke.getKeyStroke('s');
+		actionMap.put(keys, new AbstractAction("s") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				graph.doubleSelectionRangeLeft();
+			}
+		});
+
+		//'e' nudge range left
+		KeyStroke keye = KeyStroke.getKeyStroke('e');
+		actionMap.put(keye, new AbstractAction("e") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				graph.nudgeSelectionRangeLeft();
+			}
+		});
+
+		//'r' nudge range left
+		KeyStroke keyr = KeyStroke.getKeyStroke('r');
+		actionMap.put(keyr, new AbstractAction("r") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				graph.nudgeSelectionRangeRight();
 			}
 		});
 
