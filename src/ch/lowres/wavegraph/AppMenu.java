@@ -15,6 +15,12 @@ public class AppMenu extends JMenuBar
 	private static JMenuItem mi_save_image=new JMenuItem("Save As Image...");
 	private static JMenuItem mi_quit=new JMenuItem("Quit");
 
+	private static JMenu menu_view=new JMenu("View");
+	private static JMenuItem mi_mono=new JMenuItem("Mono (Overlayed)");// vs. Multichannel
+	private static JMenuItem mi_rectified=new JMenuItem("Rectified"); //vs. Normal
+	private static JMenuItem mi_grid=new JMenuItem("Hide Grid"); //vs. Show Grid
+	private static JMenuItem mi_middleLine=new JMenuItem("Hide Middle Line"); //vs. Show Middle Line
+
 	private static JMenu menu_help=new JMenu("Help");
 	private static JMenuItem mi_about=new JMenuItem("About...");
 
@@ -46,8 +52,14 @@ public class AppMenu extends JMenuBar
 		menu_main.add(new JSeparator());
 		menu_main.add(mi_quit);
 		menu_main.setMnemonic('F');
-
 		add(menu_main);
+
+		menu_view.add(mi_mono);
+		menu_view.add(mi_rectified);
+		menu_view.add(mi_grid);
+		menu_view.add(mi_middleLine);
+		menu_view.setMnemonic('V');
+		add(menu_view);
 
 		menu_help.add(mi_about);
 		menu_help.setMnemonic('H');
@@ -83,12 +95,80 @@ public class AppMenu extends JMenuBar
 			}
 		});
 
+		mi_mono.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				if(m.graph.isDisplayMono())
+				{
+					m.graph.setDisplayMono(false);
+					mi_mono.setLabel("Mono (Overlayed)");
+				}
+				else
+				{
+					m.graph.setDisplayMono(true);
+					mi_mono.setLabel("Multichannel");
+				}
+			}
+		});
+
+		mi_rectified.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				if(m.graph.isDisplayRectified())
+				{
+					m.graph.setDisplayRectified(false);
+					mi_rectified.setLabel("Rectified");
+				}
+				else
+				{
+					m.graph.setDisplayRectified(true);
+					mi_rectified.setLabel("Normal");
+				}
+			}
+		});
+
+		mi_grid.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				if(m.graph.isDisplayGrid())
+				{
+					m.graph.setDisplayGrid(false);
+					mi_grid.setLabel("Show Grid");
+				}
+				else
+				{
+					m.graph.setDisplayGrid(true);
+					mi_grid.setLabel("Hide Grid");
+				}
+			}
+		});
+
+		mi_middleLine.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				if(m.graph.isDisplayMiddleLine())
+				{
+					m.graph.setDisplayMiddleLine(false);
+					mi_middleLine.setLabel("Show Middle Line");
+				}
+				else
+				{
+					m.graph.setDisplayMiddleLine(true);
+					mi_middleLine.setLabel("Hide Middle Line");
+				}
+			}
+		});
+
 		mi_about.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
 				m.about.setVisible(true);
-                        }
+			}
 		});
 	}//end addActionListeners
 }//end class AppMenu

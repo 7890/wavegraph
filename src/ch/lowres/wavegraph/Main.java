@@ -16,7 +16,7 @@ import java.util.*;
 
 import java.text.*;
 
-import javax.swing.plaf.basic.BasicScrollBarUI;
+//import javax.swing.plaf.basic.BasicScrollBarUI;
 
 //=======================================================
 public class Main //implements Observer
@@ -30,15 +30,7 @@ public class Main //implements Observer
 
 	public static AppMenu applicationMenu;
 
-	public static JScrollPane scrollpane=new JScrollPane();
-	public static JScrollBar scrollbar;
-	public static int scrollbarIncrement=16;
-	public static int scrollOffset=0; //relative to start of pane / panel
-	public static Rectangle visibleRect=new Rectangle(0,0,0,0); //absolute, viewport
-	public static long lastScrollValue=0;
-
 	public static JPanel infoPanel=new JPanel(new WrapLayout(WrapLayout.LEFT));
-
 	public static JLabel genericInfoLabel=new JLabel("");
 	public static JLabel durationLabel=new JLabel("");
 	public static JLabel scanProgressLabel=new JLabel("");
@@ -52,7 +44,6 @@ public class Main //implements Observer
 	};
 
 	public static JPanel infoPanelBottom=new JPanel(new WrapLayout(WrapLayout.RIGHT));
-
 	public static JPanel infoPanelBottomMasterGroup=new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 	public static JPanel infoPanelBottomGroup0=new JPanel(new GridLayout(3,1));
@@ -86,7 +77,7 @@ public class Main //implements Observer
 	public static int windowHeight=0;
 
 	public static WaveGraph graph;
-	public static WaveScanner scanner;//=new WaveScanner();
+	public static WaveScanner scanner;
 	public static WaveProperties props;
 	public static WaveScannerObserver scanObserver;
 
@@ -129,7 +120,6 @@ public class Main //implements Observer
 	}
 
 //=======================================================
-//	public Main(String file)
 	public Main()
 	{
 		if(os.isMac())
@@ -168,7 +158,7 @@ public class Main //implements Observer
 	public static String showOpenFileDialog(String baseDir, String file)
 	{
 		return AFileChooser.showOpenFileDialog(baseDir, file);
-	}//end showOpenFileDialog
+	}
 
 //=======================================================
 	public static void resetAllLabels()
@@ -233,7 +223,6 @@ public class Main //implements Observer
 			graph.clear();
 			System.gc();
 			width=0;
-			scrollbar.setValue(0);
 			resetAllLabels();
 
 			props=scanner.getProps(currentFile);
@@ -272,7 +261,6 @@ public class Main //implements Observer
 				public void run()
 				{
 					graph.revalidate();
-					scrollpane.revalidate();
 				}
 			});
 
@@ -291,15 +279,6 @@ public class Main //implements Observer
 		mainframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainframe.setJMenuBar(applicationMenu);
 		mainframe.setLayout(new BorderLayout());
-
-		scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		//scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		scrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-		scrollpane.setWheelScrollingEnabled(true);
-
-		scrollbar=scrollpane.getHorizontalScrollBar();
-		scrollbar.setUnitIncrement(scrollbarIncrement);
-		scrollbar.setUI(new BasicScrollBarUI());
 
 		buttonAbort.setEnabled(false);
 
@@ -362,10 +341,6 @@ public class Main //implements Observer
 
 		infoPanelBottom.add(infoPanelBottomMasterGroup);
 
-		mainframe.add(infoPanel, BorderLayout.NORTH);
-		mainframe.add(scrollpane, BorderLayout.CENTER);
-		mainframe.add(infoPanelBottom, BorderLayout.SOUTH);
-
 		Dimension screenDimension=Toolkit.getDefaultToolkit().getScreenSize();
 		Insets insets=Toolkit.getDefaultToolkit().getScreenInsets(mainframe.getGraphicsConfiguration());
 
@@ -381,8 +356,9 @@ public class Main //implements Observer
 		scanner=new WaveScanner(graph);
 		scanObserver=new WaveScannerObserver();
 
-		scrollpane.setViewportView(graph);
-		scrollpane.setBackground(Colors.wave_canvas_background);
+		mainframe.add(infoPanel, BorderLayout.NORTH);
+		mainframe.add(graph, BorderLayout.CENTER);
+		mainframe.add(infoPanelBottom, BorderLayout.SOUTH);
 
 		//mainframe.pack();
 		//mainframe.show();
@@ -429,36 +405,36 @@ public class Main //implements Observer
 
 		viewPortInfoLabelPixelsFrom.setText(
 			"S: "+
-				df3.format(scrollOffset)
+				df3.format(graph.scrollOffset)
 		);
 
 		viewPortInfoLabelPixelsTo.setText(
 			"E: "+
-				df3.format(scrollOffset+visibleRect.getWidth())
+				df3.format(graph.scrollOffset+graph.visibleRect.getWidth())
 		);
 
 		viewPortInfoLabelPixelsWidth.setText(
 			"L: "+
 				df3.format(
-				(long)visibleRect.getWidth())
+				(long)graph.visibleRect.getWidth())
 		);
 
 		viewPortInfoLabelTimeFrom.setText(
 			"S: "+
 			props.getDurationString( 
-				(long)(scrollOffset*scanner.getBlockSize()))
+				(long)(graph.scrollOffset*scanner.getBlockSize()))
 		);
 
 		viewPortInfoLabelTimeWidth.setText(
 			"L: "+
 			props.getDurationString( 
-				(long)visibleRect.getWidth()*scanner.getBlockSize())
+				(long)graph.visibleRect.getWidth()*scanner.getBlockSize())
 		);
 
 
 		//show "real" end if scroller at max (or graph less wide than window)
 		if(
-			scrollOffset+visibleRect.getWidth()>=scrollbar.getMaximum())
+			graph.scrollOffset+graph.visibleRect.getWidth()>=graph.scrollbar.getMaximum())
 		{
 			viewPortInfoLabelTimeTo.setText(
 				"E: "+
@@ -472,7 +448,7 @@ public class Main //implements Observer
 			viewPortInfoLabelTimeTo.setText(
 				"E: "+
 				props.getDurationString( 
-					(long)((scrollOffset+visibleRect.getWidth())*scanner.getBlockSize()))
+					(long)((graph.scrollOffset+graph.visibleRect.getWidth())*scanner.getBlockSize()))
 			);
 		}
 	}//end updateViewportLabel
@@ -495,13 +471,12 @@ public class Main //implements Observer
 			{
 				if(haveValidFile)
 				{
-
 					Component c = (Component)evt.getSource();
 					//p("resized");
 					updateTimer.stop();
 
 					graph.suppressRepaint(true);
-					graph.setVisible(false);
+					graph.panel.setVisible(false);
 
 					updateTimer.setInitialDelay(200);
 					updateTimer.restart();
@@ -509,24 +484,24 @@ public class Main //implements Observer
 			}
 		});
 
-		//
 		updateTimer.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
 				if(haveValidFile)
 				{
-					//p(".");
-					scrollOffset=scrollbar.getValue();
+					//p("==timer action");
+					graph.scrollOffset=graph.scrollbar.getValue();
 
-					visibleRect=scrollpane.getViewport().getVisibleRect();
+					graph.visibleRect=graph.getViewport().getVisibleRect();
 
 					updateViewportLabel();
 
 					graph.suppressRepaint(false);
-					graph.setVisible(true);
-					scrollpane.repaint();
+					graph.panel.setVisible(true);
+					graph.panel.repaint();
 					updateTimer.stop();
+
 				}
 			}//end actionPerformed	
 		});//end addActionListener to updateTimer
@@ -534,50 +509,7 @@ public class Main //implements Observer
 		addDnDSupport();
 		addGlobalKeyListeners();
 		scanner.addObserver(scanObserver);
-		addScrollbarListener();
 	}
-
-//=======================================================
-	private static void addScrollbarListener()
-	{
-		//scrollbar shouldn't be visible when no file is loaded
-		scrollbar.addAdjustmentListener(new AdjustmentListener()
-		{
-			public void adjustmentValueChanged(AdjustmentEvent e)
-			{
-				if(graph==null || props==null || !props.isValid() || scanner==null)
-				{
-					return;
-				}
-				//scrollOffset=e.getValue();
-				scrollOffset=scrollbar.getValue();
-				visibleRect=scrollpane.getViewport().getVisibleRect();
-
-				updateViewportLabel();
-
-				//if adjustment is not currently ongoing
-				if(!e.getValueIsAdjusting())
-				{
-					updateTimer.stop();
-					graph.suppressRepaint(false);
-					graph.setVisible(true);
-					scrollpane.repaint();
-				}
-				else//is adjusting
-				{
-					if(lastScrollValue!=e.getValue())
-					{
-						lastScrollValue=e.getValue();
-						updateTimer.stop();
-						updateTimer.setInitialDelay(40);
-						updateTimer.restart();
-					}
-					graph.suppressRepaint(true);
-					graph.setVisible(false);
-				}
-			}//end adjustmentValueChanged
-		});//end addAdjustmentListener
-	}//end addScrollbarListener
 
 //=======================================================
 	private static void addDnDSupport()
@@ -590,17 +522,44 @@ public class Main //implements Observer
 				try
 				{
 					evt.acceptDrop(DnDConstants.ACTION_COPY);
-					java.util.List<File> droppedFiles = 
-						(java.util.List<File>) evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
 
-					for (File file : droppedFiles)
+					//files, directory, etc
+					if(evt.getTransferable().isDataFlavorSupported(DataFlavor.javaFileListFlavor))
 					{
-						p("drag+drop event: "+file.getAbsolutePath());
-						processFile(file.getAbsolutePath());
+						java.util.List<File> droppedFiles = 
+							(java.util.List<File>)
+								evt.getTransferable().getTransferData(
+									DataFlavor.javaFileListFlavor);
+
+						for (File file : droppedFiles)
+						{
+							p("drag+drop event: "+file.getAbsolutePath());
+							evt.dropComplete(true);
+							processFile(file.getAbsolutePath());
+							mainframe.toFront();
+							buttonAbort.requestFocus();
+							//only first
+							break;
+						}
+					}
+					//if DataFlavor.javaFileListFlavor was not available
+					//try with string
+					else if(evt.getTransferable().isDataFlavorSupported(DataFlavor.stringFlavor))
+					{
+						String dndString=(String)
+							evt.getTransferable().getTransferData(
+								DataFlavor.stringFlavor);
+						p("got this drag&drop string:"+dndString);
+						String[] lines = dndString.split(System.getProperty("line.separator"));
+						//ev. multiple lines, try rough for now
+						processFile(lines[0].substring(lines[0].indexOf(
+							"file://")+7,lines[0].length()).trim());
 						mainframe.toFront();
 						buttonAbort.requestFocus();
-						//only first
-						break;
+					}
+					else
+					{
+						w("dataflavor of drag&drop event is not supported");
 					}
 				}catch(Exception ex)
 				{
@@ -615,6 +574,9 @@ public class Main //implements Observer
 	{
 		JRootPane rootPane = mainframe.getRootPane();
 
+		//to enable key repeat events in osx (lion, ..?) /!\:
+		//defaults write -g ApplePressAndHoldEnabled -bool false
+
 		InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 
 		//scroll left
@@ -623,7 +585,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getValue()-scrollbarIncrement);
+				graph.scrollLeft(1);
 			}
 		});
 
@@ -633,7 +595,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getValue()-scrollbarIncrement*4);
+				graph.scrollLeft(4);
 			}
 		});
 
@@ -643,7 +605,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getValue()-scrollbarIncrement*16);
+				graph.scrollLeft(16);
 			}
 		});
 
@@ -654,10 +616,9 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getValue()-scrollbarIncrement*64);
+				graph.scrollLeft(64);
 			}
 		});
-
 
 		//scroll right
 		KeyStroke keyRight = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,0);
@@ -665,7 +626,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getValue()+scrollbarIncrement);
+				graph.scrollRight(1);
 			}
 		});
 
@@ -675,7 +636,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getValue()+scrollbarIncrement*4);
+				graph.scrollRight(4);
 			}
 		});
 
@@ -685,7 +646,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getValue()+scrollbarIncrement*16);
+				graph.scrollRight(16);
 			}
 		});
 
@@ -696,7 +657,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getValue()+scrollbarIncrement*64);
+				graph.scrollRight(64);
 			}
 		});
 
@@ -706,7 +667,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(0);
+				graph.scrollToStart();
 			}
 		});
 
@@ -716,7 +677,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				scrollbar.setValue(scrollbar.getMaximum());
+				graph.scrollToEnd();
 			}
 		});
 
@@ -779,7 +740,6 @@ public class Main //implements Observer
 				graph.nudgeSelectionRangeRight();
 			}
 		});
-
 		//http://stackoverflow.com/questions/100123/application-wide-keyboard-shortcut-java-swing
 		KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		kfm.addKeyEventDispatcher( new KeyEventDispatcher() 

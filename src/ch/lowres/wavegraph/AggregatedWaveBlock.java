@@ -50,13 +50,14 @@ public class AggregatedWaveBlock
 		}
 	}
 
+//=======================================================
 	public void paint(Graphics2D g2, float waveHeight, float baseLineY)
 	{
-		paint(g2,waveHeight,baseLineY,0);
+		paint(g2,waveHeight,baseLineY,0,false);
 	}
 
 //=======================================================
-	public void paint(Graphics2D g2, float waveHeight, float baseLineY, float offsetX)
+	public void paint(Graphics2D g2, float waveHeight, float baseLineY, float offsetX, boolean displayRectified)
 	{
 /*
 
@@ -66,16 +67,46 @@ baseLineY---------ampl. 0-----------|-
                                     |
                                     |_min (-0.4) * waveHeight -> baseLineY - (-)min*waveHeight
 
+rectified:
+
+----------------------------
+
+                      |
+baseLineY-----------|-|----- displayed amplitude is max of abs(min), abs(max), abs(max-min)
+              |     | |
+              ||.|..|||
+---------------------------- drawing starts a bottom of wavelane
+
+
 */
-		float above=baseLineY-max*waveHeight;
-		float below=baseLineY-min*waveHeight;
-
-		if(below-above<1)
+		if(!displayRectified)
 		{
-			//line height 1 pixel minimum
-			below=above-1;
-		}
+			float above=baseLineY-max*waveHeight;
+			float below=baseLineY-min*waveHeight;
 
-		g2.draw(new Line2D.Float(block+offsetX, below, block+offsetX, above));
-	}
+			if(below-above<1)
+			{
+				//line height 1 pixel minimum
+				below=above-1;
+			}
+
+			g2.draw(new Line2D.Float(block+offsetX, below, block+offsetX, above));
+		}
+		else
+		{
+			float absmax=Math.abs(max);
+			float absmin=Math.abs(min);
+			float absdiff=Math.abs(absmax-absmin);
+
+			float amplitude=Math.max(
+				Math.max(absmax,absmin),absdiff
+			)*waveHeight*2;
+
+			//float above=baseLineY+waveHeight-amplitude;
+			float below=baseLineY+waveHeight;
+			float above=below-amplitude;
+
+			g2.draw(new Line2D.Float(block+offsetX, below, block+offsetX, above));
+		}
+	}//end paint
 }//end class AggregatedWaveBlock
