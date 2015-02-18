@@ -26,20 +26,20 @@ public class WaveScannerObserver implements Observer
 				//derive block no
 				//val=val-WaveScanner.DATA_AVAILABLE-1000;
 
-				updateCounter++;
+			updateCounter++;
 
-				//don't redraw on every update
-				//depends on requested resolution / width
-				if(updateCounter>m.width/100)
-				{
-					int percent = (int)(100 * val / m.width);
-					m.scanProgressLabel.setText(" |  "+percent+"% Scanned");
+			//don't redraw on every update
+			//depends on requested resolution / width
+			if(updateCounter>m.width/100)
+			{
+				int percent = (int)(100 * val / m.width);
+				m.scanProgressLabel.setText(" |  "+percent+"% Scanned");
 
-					m.infoPanel.repaint();
-					m.graph.repaintWhileLoading(val);
+				m.infoPanelTop.repaint();
+				m.graph.repaintWhileLoading(val);
 
-					updateCounter=0;
-				}
+				updateCounter=0;
+			}
 			//}
 		}
 		else if(arg instanceof Integer)
@@ -58,7 +58,7 @@ public class WaveScannerObserver implements Observer
 				m.viewPortInfoLabel1.setText(
 					m.df.format(m.scanner.getBlockSize())+" FPP, "
 					+m.df.format(m.width)
-			                +" Pixels"
+					+" Pixels"
 				);
 				m.p("frames per pixel: "+m.scanner.getBlockSize()+", frames to scan: "+m.scanner.getCycles());
 
@@ -79,7 +79,7 @@ public class WaveScannerObserver implements Observer
 				m.p("scan aborted.");
 			}
 
-			m.infoPanel.repaint();
+			m.infoPanelTop.repaint();
 			m.graph.repaint();
 		}//end if update arg was Integer
 	}//end update

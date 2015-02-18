@@ -23,14 +23,14 @@ public class Main //implements Observer
 {
 	public final static String progName="Wavegraph";
 	public final static String progHome="https://github.com/7890/wavegraph";
-	public final static String progVersion="0.000d";
+	public final static String progVersion="0.000e";
 
 	public static JFrame mainframe=new JFrame();
 	public static Image appIcon=createImageFromJar("/resources/images/wavegraph_icon.png");
 
 	public static AppMenu applicationMenu;
 
-	public static JPanel infoPanel=new JPanel(new WrapLayout(WrapLayout.LEFT));
+	public static JPanel infoPanelTop=new JPanel(new WrapLayout(WrapLayout.LEFT));
 	public static JLabel genericInfoLabel=new JLabel("");
 	public static JLabel durationLabel=new JLabel("");
 	public static JLabel scanProgressLabel=new JLabel("");
@@ -44,23 +44,30 @@ public class Main //implements Observer
 	};
 
 	public static JPanel infoPanelBottom=new JPanel(new WrapLayout(WrapLayout.RIGHT));
-	public static JPanel infoPanelBottomMasterGroup=new JPanel(new FlowLayout(FlowLayout.LEFT));
+	public static JPanel infoPanelBottomViewportGroup=new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 	public static JPanel infoPanelBottomGroup0=new JPanel(new GridLayout(3,1));
 	public static JLabel viewPortInfoLabel1=new JLabel("");
 	public static JLabel mousePositionInGraph=new JLabel("");
 
-	public static JPanel infoPanelBottomGroup1=new JPanel(new GridLayout(4,1));
-	public static JLabel viewPortInfoLabelPixelsFrom=new JLabel("",JLabel.CENTER);
-	public static JLabel viewPortInfoLabelPixelsTo=new JLabel("",JLabel.CENTER);
-	public static JLabel viewPortInfoLabelPixelsWidth=new JLabel("",JLabel.CENTER);
-	public static JLabel infoPanelBottomGroup1Caption=new JLabel("Viewport Pixels",JLabel.CENTER);
+	public static RangeBox rangebox_vpPixels=new RangeBox("Viewport Pixels");
+	public static RangeBox rangebox_vpHMS=new RangeBox("Viewport H:M:S");
+	public static RangeBox rangebox_selFrames=new RangeBox("Selection Frames");
+	public static RangeBox rangebox_selPixels=new RangeBox("Selection Pixels");
+	public static RangeBox rangebox_selHMS=new RangeBox("Selection H:M:S");
 
-	public static JPanel infoPanelBottomGroup2=new JPanel(new GridLayout(4,1));
-	public static JLabel viewPortInfoLabelTimeFrom=new JLabel("",JLabel.CENTER);
-	public static JLabel viewPortInfoLabelTimeTo=new JLabel("",JLabel.CENTER);
-	public static JLabel viewPortInfoLabelTimeWidth=new JLabel("",JLabel.CENTER);
-	public static JLabel infoPanelBottomGroup2Caption=new JLabel("Viewport H:M:S",JLabel.CENTER);
+
+/*
+	public static JPanel infoPanelBottomSelectionGroup1=new JPanel(new FlowLayout(FlowLayout.LEFT));
+	public static JLabel infoPanelBottomGroup3Caption=new JLabel("Selection Pixels",JLabel.CENTER);
+	public static JLabel infoPanelBottomGroup4Caption=new JLabel("Selection H:M:S",JLabel.CENTER);
+	public static JPanel infoPanelBottomSelectionGroup2=new JPanel(new FlowLayout(FlowLayout.LEFT));
+	public static JLabel infoPanelBottomGroup5Caption=new JLabel("Selection Frames",JLabel.CENTER);
+	public static JLabel infoPanelBottomGroup6Caption=new JLabel("Selection Bytes",JLabel.CENTER);
+	public static JPanel infoPanelBottomMiscGroup=new JPanel(new FlowLayout(FlowLayout.LEFT));
+	public static JLabel infoPanelBottomGroup7Caption=new JLabel("Edit Point",JLabel.CENTER);
+	public static JLabel infoPanelBottomGroup8Caption=new JLabel("Mouse",JLabel.CENTER);
+*/
 
 	public static int ctrlOrCmd=InputEvent.CTRL_MASK;
 	public static OSTest os=new OSTest();
@@ -172,16 +179,6 @@ public class Main //implements Observer
 		//force bottom panel to have size as with labels
 		viewPortInfoLabel1.setText("");//Open File via Menu or Drag & Drop in Window");
 		mousePositionInGraph.setText("");
-
-		viewPortInfoLabelPixelsFrom.setText("");
-		viewPortInfoLabelPixelsTo.setText("");
-		viewPortInfoLabelPixelsWidth.setText("");
-
-		viewPortInfoLabelTimeFrom.setText("");
-		viewPortInfoLabelTimeTo.setText("");
-		viewPortInfoLabelTimeWidth.setText("");
-
-		viewPortInfoLabelTimeWidth.setText("");
 	}
 
 //=======================================================
@@ -216,7 +213,7 @@ public class Main //implements Observer
 			}
 
 			haveValidFile=false;
-			infoPanelBottom.setVisible(false);
+//			infoPanelBottom.setVisible(false);
 
 			scanner.abort();
 			updateTimer.stop();
@@ -234,9 +231,12 @@ public class Main //implements Observer
 			}
 
 			haveValidFile=true;
-			infoPanelBottom.setVisible(true);
+//			infoPanelBottom.setVisible(true);
+
+			applicationMenu.addRecentFile(new File(currentFile));
 
 			updateGenericInfoLabel();
+			updateSelectionLabel();
 			updateViewportLabel();
 
 			mainframe.setTitle(progName+" - "+currentFile);
@@ -282,64 +282,51 @@ public class Main //implements Observer
 
 		buttonAbort.setEnabled(false);
 
-		infoPanel.setOpaque(true);
-		infoPanel.setBackground(Colors.infopanel_background);
+		infoPanelTop.setOpaque(true);
+		infoPanelTop.setBackground(Colors.infopanel_background);
 
 		infoPanelBottom.setOpaque(true);
 		infoPanelBottom.setBackground(Colors.infopanel_background);
-		infoPanelBottom.setVisible(false);
 
-		infoPanelBottomMasterGroup.setOpaque(false);
+		infoPanelBottomViewportGroup.setOpaque(false);
+//		infoPanelBottomSelectionGroup1.setOpaque(false);
+//		infoPanelBottomSelectionGroup2.setOpaque(false);
+//		infoPanelBottomMiscGroup.setOpaque(false);
+
 		infoPanelBottomGroup0.setOpaque(false);
 		infoPanelBottomGroup0.setPreferredSize(new Dimension(200,70));
-
-		infoPanelBottomGroup1.setPreferredSize(new Dimension(110,70));
-		infoPanelBottomGroup1Caption.setOpaque(true);
-		infoPanelBottomGroup1Caption.setBackground(Colors.labelgroup_background);
-		infoPanelBottomGroup1Caption.setForeground(Colors.labelgroup_foreground);
-
-		infoPanelBottomGroup2.setPreferredSize(new Dimension(110,70));
-		infoPanelBottomGroup2Caption.setOpaque(true);
-		infoPanelBottomGroup2Caption.setBackground(Colors.labelgroup_background);
-		infoPanelBottomGroup2Caption.setForeground(Colors.labelgroup_foreground);
-
+/*
 		JPanel spacer=new JPanel(new GridLayout(3,1));
 		spacer.add(new JLabel(" "));
 		spacer.add(new JLabel(" "));
 		spacer.add(new JLabel(" "));
 		spacer.setOpaque(false);
-
-		infoPanel.add(genericInfoLabel);
-		infoPanel.add(durationLabel);
-		infoPanel.add(scanProgressLabel);
-		infoPanel.add(buttonAbort);
+*/
+		infoPanelTop.add(genericInfoLabel);
+		infoPanelTop.add(durationLabel);
+		infoPanelTop.add(scanProgressLabel);
+		infoPanelTop.add(buttonAbort);
 
 		infoPanelBottomGroup0.add(viewPortInfoLabel1);
 		infoPanelBottomGroup0.add(mousePositionInGraph);
 
 		infoPanelBottom.add(infoPanelBottomGroup0);
 
-		infoPanelBottomGroup1.add(viewPortInfoLabelPixelsFrom);
-		infoPanelBottomGroup1.add(viewPortInfoLabelPixelsTo);
-		infoPanelBottomGroup1.add(viewPortInfoLabelPixelsWidth);
+		rangebox_selFrames.setFormat(df3);
+		infoPanelBottom.add(rangebox_selFrames);
 
-		infoPanelBottomGroup1Caption.setFont(new JLabel().getFont().deriveFont(10f));
-		infoPanelBottomGroup1.add(infoPanelBottomGroup1Caption);
+		rangebox_selPixels.setFormat(df3);
+		infoPanelBottom.add(rangebox_selPixels);
 
-		infoPanelBottomMasterGroup.add(spacer);
-		infoPanelBottomMasterGroup.add(infoPanelBottomGroup1);
+		infoPanelBottom.add(rangebox_selHMS);
 
-		infoPanelBottomGroup2.add(viewPortInfoLabelTimeFrom);
-		infoPanelBottomGroup2.add(viewPortInfoLabelTimeTo);
-		infoPanelBottomGroup2.add(viewPortInfoLabelTimeWidth);
+		rangebox_vpPixels.setFormat(df3);		
+		infoPanelBottomViewportGroup.add(rangebox_vpPixels);
 
-		infoPanelBottomGroup2Caption.setFont(new JLabel().getFont().deriveFont(10f));
-		infoPanelBottomGroup2.add(infoPanelBottomGroup2Caption);
+		infoPanelBottomViewportGroup.add(rangebox_vpHMS);
 
-		infoPanelBottomMasterGroup.add(spacer);
-		infoPanelBottomMasterGroup.add(infoPanelBottomGroup2);
+		infoPanelBottom.add(infoPanelBottomViewportGroup);
 
-		infoPanelBottom.add(infoPanelBottomMasterGroup);
 
 		Dimension screenDimension=Toolkit.getDefaultToolkit().getScreenSize();
 		Insets insets=Toolkit.getDefaultToolkit().getScreenInsets(mainframe.getGraphicsConfiguration());
@@ -356,7 +343,7 @@ public class Main //implements Observer
 		scanner=new WaveScanner(graph);
 		scanObserver=new WaveScannerObserver();
 
-		mainframe.add(infoPanel, BorderLayout.NORTH);
+		mainframe.add(infoPanelTop, BorderLayout.NORTH);
 		mainframe.add(graph, BorderLayout.CENTER);
 		mainframe.add(infoPanelBottom, BorderLayout.SOUTH);
 
@@ -394,6 +381,67 @@ public class Main //implements Observer
 	}
 
 //========================================================================
+	public static void updateSelectionLabel()
+	{
+		if(graph.positionsSelectionRange[0].x<=graph.positionsSelectionRange[1].x )
+		{
+			rangebox_selFrames.setStart(graph.positionsSelectionRange[0].x*scanner.getBlockSize());
+			rangebox_selFrames.setEnd(graph.positionsSelectionRange[1].x*scanner.getBlockSize());
+			rangebox_selFrames.setLength(
+				(graph.positionsSelectionRange[1].x-graph.positionsSelectionRange[0].x)
+					*scanner.getBlockSize());
+
+			rangebox_selPixels.setStart(graph.positionsSelectionRange[0].x);
+			rangebox_selPixels.setEnd(graph.positionsSelectionRange[1].x);
+			rangebox_selPixels.setLength(graph.positionsSelectionRange[1].x-graph.positionsSelectionRange[0].x);
+
+			rangebox_selHMS.setStart(
+				"S: "+
+				props.getDurationString( 
+					(long)(graph.positionsSelectionRange[0].x*scanner.getBlockSize()))
+			);
+
+			rangebox_selHMS.setEnd(
+				"E: "+
+				props.getDurationString( 
+					(long)(graph.positionsSelectionRange[1].x*scanner.getBlockSize()))
+			);
+
+			rangebox_selHMS.setLength(
+				"L: "+
+				props.getDurationString( 
+					(long)(graph.positionsSelectionRange[1].x-graph.positionsSelectionRange[0].x)
+						*scanner.getBlockSize())
+			);
+		}
+		else
+		{
+			rangebox_selPixels.setStart(graph.positionsSelectionRange[1].x);
+			rangebox_selPixels.setEnd(graph.positionsSelectionRange[0].x);
+			rangebox_selPixels.setLength(graph.positionsSelectionRange[0].x-graph.positionsSelectionRange[1].x);
+
+			rangebox_selHMS.setStart(
+				"S: "+
+				props.getDurationString( 
+					(long)(graph.positionsSelectionRange[1].x*scanner.getBlockSize()))
+			);
+
+			rangebox_selHMS.setEnd(
+				"E: "+
+				props.getDurationString( 
+					(long)(graph.positionsSelectionRange[0].x*scanner.getBlockSize()))
+			);
+
+			rangebox_selHMS.setLength(
+				"L: "+
+				props.getDurationString( 
+					(long)(graph.positionsSelectionRange[0].x-graph.positionsSelectionRange[1].x)
+						*scanner.getBlockSize())
+			);
+		}
+	}//end updateSelectionLabel
+
+//========================================================================
 	public static void updateViewportLabel()
 	{
 		//p("update viewport label");
@@ -403,29 +451,17 @@ public class Main //implements Observer
 		+" Pixels");
 */
 
-		viewPortInfoLabelPixelsFrom.setText(
-			"S: "+
-				df3.format(graph.scrollOffset)
-		);
+		rangebox_vpPixels.setStart(graph.scrollOffset);
+		rangebox_vpPixels.setEnd(graph.scrollOffset+graph.visibleRect.getWidth());
+		rangebox_vpPixels.setLength(graph.visibleRect.getWidth());
 
-		viewPortInfoLabelPixelsTo.setText(
-			"E: "+
-				df3.format(graph.scrollOffset+graph.visibleRect.getWidth())
-		);
-
-		viewPortInfoLabelPixelsWidth.setText(
-			"L: "+
-				df3.format(
-				(long)graph.visibleRect.getWidth())
-		);
-
-		viewPortInfoLabelTimeFrom.setText(
+		rangebox_vpHMS.setStart(
 			"S: "+
 			props.getDurationString( 
 				(long)(graph.scrollOffset*scanner.getBlockSize()))
 		);
 
-		viewPortInfoLabelTimeWidth.setText(
+		rangebox_vpHMS.setLength(
 			"L: "+
 			props.getDurationString( 
 				(long)graph.visibleRect.getWidth()*scanner.getBlockSize())
@@ -436,7 +472,7 @@ public class Main //implements Observer
 		if(
 			graph.scrollOffset+graph.visibleRect.getWidth()>=graph.scrollbar.getMaximum())
 		{
-			viewPortInfoLabelTimeTo.setText(
+			rangebox_vpHMS.setEnd(
 				"E: "+
 				props.getDurationString(
 					(long)(scanner.getCycles()))
@@ -444,8 +480,7 @@ public class Main //implements Observer
 		}
 		else
 		{
-
-			viewPortInfoLabelTimeTo.setText(
+			rangebox_vpHMS.setEnd(
 				"E: "+
 				props.getDurationString( 
 					(long)((graph.scrollOffset+graph.visibleRect.getWidth())*scanner.getBlockSize()))
@@ -740,6 +775,17 @@ public class Main //implements Observer
 				graph.nudgeSelectionRangeRight();
 			}
 		});
+
+		//esc show menu
+		KeyStroke keyEsc = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0);
+		actionMap.put(keyEsc, new AbstractAction("ESC") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				showMenu(true);
+			}
+		});
+
 		//http://stackoverflow.com/questions/100123/application-wide-keyboard-shortcut-java-swing
 		KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		kfm.addKeyEventDispatcher( new KeyEventDispatcher() 
@@ -775,6 +821,70 @@ public class Main //implements Observer
 			(int)((screenDimension.getWidth()-insets.left-insets.right-d.getWidth()) / 2),
 			(int)((screenDimension.getHeight()-insets.top-insets.bottom-d.getHeight()) / 2)
 		);
+	}
+
+//========================================================================
+	public static void setDecorated(boolean deco)
+	{
+		mainframe.setVisible(false);
+		mainframe.dispose();
+		try{
+			if(deco)
+			{
+				mainframe.setUndecorated(false);
+			}
+			else
+			{
+				mainframe.setUndecorated(true);
+			}
+		}catch(Exception e){}
+		mainframe.setVisible(true);
+		mainframe.validate();
+	}
+
+//========================================================================
+	public static void showMenu(boolean show)
+	{
+		if(show && mainframe.getJMenuBar()==null)
+		{
+			mainframe.setJMenuBar(applicationMenu);
+		}
+		else if(!show)
+		{
+			mainframe.setJMenuBar(null);
+		}
+		mainframe.validate();
+		graph.forceRepaint();
+	}
+
+//========================================================================
+	public static void showInfoTop(boolean show)
+	{
+		if(show && !infoPanelTop.isVisible())
+		{
+			infoPanelTop.setVisible(true);
+		}
+		else if(!show)
+		{
+			infoPanelTop.setVisible(false);
+		}
+		mainframe.validate();
+		graph.forceRepaint();
+	}
+
+//========================================================================
+	public static void showInfoBottom(boolean show)
+	{
+		if(show && !infoPanelBottom.isVisible())
+		{
+			infoPanelBottom.setVisible(true);
+		}
+		else if(!show)
+		{
+			infoPanelBottom.setVisible(false);
+		}
+		mainframe.validate();
+		graph.forceRepaint();
 	}
 
 //========================================================================

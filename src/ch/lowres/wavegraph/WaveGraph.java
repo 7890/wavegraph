@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.awt.geom.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
 
 import java.io.*;
 import java.util.*;
@@ -30,6 +31,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	private GraphViewport viewport = new GraphViewport();
 
 	public JScrollBar scrollbar;
+	public int defaultScrollbarHeight=20;
 	public int scrollbarIncrement=16;
 	public int scrollOffset=0; //relative to start of pane / panel
 	public Rectangle visibleRect=new Rectangle(0,0,0,0); //absolute, viewport
@@ -53,7 +55,8 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 
 	//0: start 1: end
 	//end can be < start and vice versa, some operations use absolute start/end (manually)
-	private Point[] positionsSelectionRange=new Point[2];
+//	private 
+	public Point[] positionsSelectionRange=new Point[2];
 
 	private Point[] positionsSelectionMove=new Point[2];
 	private Point[] positionsCanvasMove=new Point[2];
@@ -103,8 +106,16 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	private boolean displayRectified=false;
 	private boolean displayGrid=true;
 	private boolean displayZeroLine=true;
+	private boolean displayFilled=false;
+	private boolean displayLimits=true;
+	private boolean displayGap=true;
+
+	private boolean displayHorizontalScrollbar=true;
 
 	private float waveHeightFactor=.95f;
+
+	//test
+	private JPopupMenu popup_menu;
 
 //=======================================================
 	public WaveGraph()
@@ -112,10 +123,25 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		createGUI();
 		resetPositions();
 
-		panel.addMouseListener(this);
-		panel.addMouseMotionListener(this);
+		addMouseListeners();
 		addKeyStrokeActions();
 		addScrollbarListener();
+	}
+
+//=======================================================
+	public void addMouseListeners()
+	{
+		panel.addMouseListener(this);
+		panel.addMouseMotionListener(this);
+	}
+
+//=======================================================
+	public void removeMouseListeners()
+	{
+		panel.removeMouseListener(this);
+		panel.removeMouseMotionListener(this);
+		cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+		setCursor(cursor);
 	}
 
 //=======================================================
@@ -134,6 +160,9 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		scrollbar.setUnitIncrement(scrollbarIncrement);
 		scrollbar.setUI(new BasicScrollBarUI());
 
+		scrollbar.setPreferredSize(new Dimension(4000,defaultScrollbarHeight));
+		scrollbar.setSize(new Dimension(4000,defaultScrollbarHeight));
+
 		viewport.setView(panel);
 		setViewport(viewport);
 	}
@@ -147,6 +176,11 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 //=======================================================
 	public void resetPositions()
 	{
+		MouseEvent event=new MouseEvent(panel,0,0,0,0,0,0,0,0,false,MouseEvent.BUTTON1);
+		positions[0]=event;
+		positions[1]=event;
+		positions[2]=event;
+
 		positionsSelectionRange[0]=new Point(0,0);
 		positionsSelectionRange[1]=new Point(0,0);
 
@@ -171,23 +205,29 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		firstCounterWhileLoading=0;
 		waitWithRepaintWhileLoading=false;
 
-		SwingUtilities.invokeLater(new Runnable()
-		{
-			public void run()
-			{
-				panel.repaint();
-			}
-		});
+		forceRepaint();
+	}
+
+//=======================================================
+	public void forceRepaint()
+	{
+		validate();
+		scrollOffset=scrollbar.getValue();
+		visibleRect=getViewport().getVisibleRect();
+		panel.validate();
+		img=null;
+		imgLeft=null;
+		imgRight=null;
+		singlePixelChange=false;
+		panel.repaint();
 	}
 
 //=======================================================
 	public void setDisplayMono(boolean mono)
 	{
-		if(displayMono!=mono)
-		{
-			displayMono=mono;
-			panel.repaint();
-		}
+		displayMono=mono;
+		img=null;
+		panel.repaint();
 	}
 
 //=======================================================
@@ -199,11 +239,10 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 //=======================================================
 	public void setDisplayRectified(boolean rectified)
 	{
-		if(displayRectified!=rectified)
-		{
-			displayRectified=rectified;
-			panel.repaint();
-		}
+		displayRectified=rectified;
+		img=null;
+		panel.repaint();
+
 	}
 
 //=======================================================
@@ -213,13 +252,11 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	}
 
 //=======================================================
-	public void setDisplayGrid(boolean grid)
+	public void setDisplayGrid(boolean show)
 	{
-		if(displayGrid!=grid)
-		{
-			displayGrid=grid;
-			panel.repaint();
-		}
+		displayGrid=show;
+		img=null;
+		panel.repaint();
 	}
 
 //=======================================================
@@ -229,13 +266,25 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	}
 
 //=======================================================
-	public void setDisplayMiddleLine(boolean middleLine)
+	public void setDisplayFilled(boolean show)
 	{
-		if(displayZeroLine!=middleLine)
-		{
-			displayZeroLine=middleLine;
-			panel.repaint();
-		}
+		displayFilled=show;
+		img=null;
+		panel.repaint();
+	}
+
+//=======================================================
+	public boolean isDisplayFilled()
+	{
+		return displayFilled;
+	}
+
+//=======================================================
+	public void setDisplayMiddleLine(boolean show)
+	{
+		displayZeroLine=show;
+		img=null;
+		panel.repaint();
 	}
 
 //=======================================================
@@ -244,7 +293,197 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		return displayZeroLine;
 	}
 
+//=======================================================
+	public void setDisplayScrollbar(boolean show)
+	{
+		displayHorizontalScrollbar=show;
+
+		//don't hide, make small instead to keep mousewheel scroll events
+
+		if(show)
+		{
+			scrollbar.setPreferredSize(new Dimension(4000,defaultScrollbarHeight));
+			scrollbar.setSize(new Dimension(4000,20));
+		}
+		else
+		{
+			scrollbar.setPreferredSize(new Dimension(0,0));
+			scrollbar.setSize(new Dimension(0,0));
+		}
+/*
+		int currentPolicy=getHorizontalScrollBarPolicy();
+		if(show && currentPolicy!=JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED)
+		{
+			setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		}
+		else if(!show && currentPolicy!=JScrollPane.HORIZONTAL_SCROLLBAR_NEVER)
+		{
+			setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		}
+*/
+		forceRepaint();
+	}
+
+//=======================================================
+	public boolean isDisplayScrollbar()
+	{
+		return displayHorizontalScrollbar;
+	}
+
+//=======================================================
+	public void setDisplayLimits(boolean show)
+	{
+		displayLimits=show;
+		img=null;
+		panel.repaint();
+	}
+
+//=======================================================
+	public boolean isDisplayLimits()
+	{
+		return displayLimits;
+	}
+
+//=======================================================
+	public void setDisplayGap(boolean show)
+	{
+		displayGap=show;
+		img=null;
+		panel.repaint();
+	}
+
+//=======================================================
+	public boolean isDisplayGap()
+	{
+		return displayGap;
+	}
+
 ////all range ops need limitation to >=0 <=width values
+
+//=======================================================
+	public void clearSelectionRange()
+	{
+		positionsSelectionRange[0]=new Point(0,0);
+		positionsSelectionRange[1]=new Point(0,0);
+m.updateSelectionLabel();
+		singlePixelChange=true;
+		panel.repaint();
+	}
+
+//=======================================================
+	public void selectAllInViewport()
+	{
+		positionsSelectionRange[0].x=(int)scrollOffset;
+		positionsSelectionRange[1].x=(int)(scrollOffset+visibleRect.getWidth());
+m.updateSelectionLabel();
+		singlePixelChange=true;
+		panel.repaint();
+	}
+
+//=======================================================
+	public void trimSelectionRangeStart()
+	{
+		//implicitely use edit point
+		trimSelectionRangeStart(temporaryMarker);
+	}
+
+//=======================================================
+	public void trimSelectionRangeStart(int newStartX)
+	{
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			positionsSelectionRange[0].x=newStartX;
+		}
+		else
+		{
+			positionsSelectionRange[1].x=newStartX;
+		}
+m.updateSelectionLabel();
+		singlePixelChange=true;
+		panel.repaint();
+	}
+
+//=======================================================
+	public void trimSelectionRangeEnd()
+	{
+		//implicitely use edit point
+		trimSelectionRangeEnd(temporaryMarker);
+	}
+
+//=======================================================
+	public void trimSelectionRangeEnd(int newEndX)
+	{
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			positionsSelectionRange[1].x=newEndX;
+		}
+		else
+		{
+			positionsSelectionRange[0].x=newEndX;
+		}
+m.updateSelectionLabel();
+		singlePixelChange=true;
+		panel.repaint();
+	}
+
+//=======================================================
+	public void alignSelectionRangeStart()
+	{
+		//implicitely use edit point
+		alignSelectionRangeStart(temporaryMarker);
+	}
+
+//=======================================================
+	public void alignSelectionRangeStart(int alignStartX)
+	{
+		int diff=0;
+
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			diff=alignStartX-positionsSelectionRange[0].x;
+		}
+		else
+		{
+			diff=alignStartX-positionsSelectionRange[1].x;
+		}
+		//set new selection range value
+		positionsSelectionRange[0].x+=diff;
+		positionsSelectionRange[1].x+=diff;
+
+m.updateSelectionLabel();
+		singlePixelChange=true;
+		panel.repaint();
+	}
+
+//=======================================================
+	public void alignSelectionRangeEnd()
+	{
+		//implicitely use edit point
+		alignSelectionRangeEnd(temporaryMarker);
+	}
+
+//=======================================================
+	public void alignSelectionRangeEnd(int alignEndX)
+	{
+		int diff=0;
+
+		if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
+		{
+			diff=alignEndX-positionsSelectionRange[1].x;
+		}
+		else
+		{
+			diff=alignEndX-positionsSelectionRange[0].x;
+		}
+
+		//set new selection range value
+		positionsSelectionRange[0].x+=diff;
+		positionsSelectionRange[1].x+=diff;
+m.updateSelectionLabel();
+		singlePixelChange=true;
+		panel.repaint();
+	}
+
 //=======================================================
 	public void doubleSelectionRangeRight()
 	{
@@ -256,6 +495,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		{
 			positionsSelectionRange[0].x+=(positionsSelectionRange[0].x-positionsSelectionRange[1].x);
 		}
+m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -271,6 +511,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		{
 			positionsSelectionRange[0].x-=(int)((positionsSelectionRange[0].x-positionsSelectionRange[1].x)/2);
 		}
+m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -286,6 +527,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		{
 			positionsSelectionRange[1].x-=(positionsSelectionRange[0].x-positionsSelectionRange[1].x);
 		}
+m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -301,6 +543,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		{
 			positionsSelectionRange[1].x+=(int)((positionsSelectionRange[0].x-positionsSelectionRange[1].x)/2);
 		}
+m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -340,6 +583,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 				panel.repaint();
 			}
 		}
+m.updateSelectionLabel();
 	}//end nudgeSelectionRangeLeft
 
 //=======================================================
@@ -377,6 +621,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 				panel.repaint();
 			}
 		}
+m.updateSelectionLabel();
 	}//nudgeSelectionRangeRight
 
 //=======================================================
@@ -500,10 +745,10 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 			//m.p("start "+sublist_start+" end "+sublist_end);
 		}//end !drawFull
 
-		int sbHeight=0;
-		if(getHorizontalScrollBar().isVisible())
+		int bottomGap=0;
+		if(displayGrid)
 		{
-			sbHeight=getHorizontalScrollBar().getHeight();
+			bottomGap=16;
 		}
 
 		//****
@@ -517,14 +762,14 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		if(!displayMono)
 		{
 			//channels should never be 0 (div zero!)
-			waveHeightMax=(float) (( (visibleRect.getHeight()-sbHeight) /m.props.getChannels()) / 2);
+			waveHeightMax=(float) (( (visibleRect.getHeight()-bottomGap) /m.props.getChannels()) / 2);
 		}
 		else
 		{
-			waveHeightMax=(float) ( (visibleRect.getHeight()-sbHeight) / 2);
+			waveHeightMax=(float) ( (visibleRect.getHeight()-bottomGap) / 2);
 		}
 
-		float waveHeight=waveHeightMax*waveHeightFactor;
+		float waveHeight=waveHeightMax*(displayGap ? waveHeightFactor : 1);
 		float baseLineY=0;
 
 		AggregatedWaveBlock awb=null;
@@ -551,7 +796,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 
 			//if high resolution == low sample per pixel value
 			//==connect avg points of blocks
-			if(awb.samples<512 && !displayRectified)
+			if(awb.samples<512)
 			{
 				//look ahead as long as not last
 				if(i<=use.size()-1-m.props.getChannels())
@@ -559,17 +804,43 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 					next=use.get(i+m.props.getChannels());
 
 					final long bl=awb.block;
-					final float top=baseLineY-awb.avg*waveHeight;
-					final float bottom=baseLineY-next.avg*waveHeight;
-
 					g2.setColor(Colors.wave_foreground.brighter());
-					g2.draw(new Line2D.Float(bl-offset, top, bl+1-offset, bottom));
+
+					if(!displayRectified && !displayFilled)
+					{
+						final float top=baseLineY-awb.avg*waveHeight;
+						final float bottom=baseLineY-next.avg*waveHeight;
+
+						g2.draw(new Line2D.Float(bl-offset, top, bl+1-offset, bottom));
+					}
+					else if(displayRectified && !displayFilled)
+					{
+						float absmax=Math.abs(awb.max);
+						float absmin=Math.abs(awb.min);
+
+						float amplitude=Math.max(absmax,absmin)*waveHeight*2;
+
+						float below=baseLineY+waveHeight;
+						float above=below-amplitude;
+						float avg=above;
+
+						absmax=Math.abs(next.max);
+						absmin=Math.abs(next.min);
+
+						amplitude=Math.max(absmax,absmin)*waveHeight*2;
+
+						above=below-amplitude;
+						float avg_next=above;
+
+						g2.draw(new Line2D.Float(bl-offset, avg, bl+1-offset, avg_next));
+
+					}
 				}
 			}
 
 			//==paint vertical amplitude blocks
 			g2.setColor(Colors.wave_foreground);
-			awb.paint(g2, waveHeight, baseLineY, -(float)offset, displayRectified);
+			awb.paint(g2, waveHeight, baseLineY, -(float)offset, displayRectified, displayFilled);
 		} //end for every block avg
 
 ///test selection locked to viewport
@@ -653,37 +924,38 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 
 		dragOngoing=true;
 
-			//if starting click of drag was in top halve
-			if(positions[0].getPoint().y<visibleRect.getHeight()/2)
+		//if starting click of drag was in top halve
+		if(positions[0].getPoint().y<visibleRect.getHeight()/2)
+		{
+			//m.p("drag create selection (top halve)");
+			dragType=DRAG_CREATE_SELECTION;
+			positionsSelectionRange[0]=positions[0].getPoint();
+			positionsSelectionRange[1]=e.getPoint();
+		}
+		else//bottom halve
+		{
+			//move selection
+			if(e.isShiftDown())
 			{
-				//m.p("drag create selection (top halve)");
-				dragType=DRAG_CREATE_SELECTION;
-				positionsSelectionRange[0]=positions[0].getPoint();
-				positionsSelectionRange[1]=e.getPoint();
+				//m.p("drag move selection (shift down, bottom halve)");
+				dragType=DRAG_MOVE_SELECTION;
+				positionsSelectionMove[1]=e.getPoint();
+				int diff=positionsSelectionMove[1].x-positionsSelectionMove[0].x-offsetToSelectionStart;
+				int diff2=positionsSelectionRange[1].x-positionsSelectionRange[0].x;
+				positionsSelectionRange[0].x=positionsSelectionMove[0].x+diff;
+				positionsSelectionRange[1].x=positionsSelectionRange[0].x+diff2;
 			}
-			else//bottom halve
+			else //move canvas
 			{
-				//move selection
-				if(e.isShiftDown())
-				{
-					//m.p("drag move selection (shift down, bottom halve)");
-					dragType=DRAG_MOVE_SELECTION;
-					positionsSelectionMove[1]=e.getPoint();
+				//m.p("drag move canvas");
+				dragType=DRAG_MOVE_CANVAS;
+				positionsCanvasMove[1]=e.getPoint();
+			}
+		}//end click in bottom halve
 
-					int diff=positionsSelectionMove[1].x-positionsSelectionMove[0].x-offsetToSelectionStart;
-					int diff2=positionsSelectionRange[1].x-positionsSelectionRange[0].x;
-					positionsSelectionRange[0].x=positionsSelectionMove[0].x+diff;
-					positionsSelectionRange[1].x=positionsSelectionRange[0].x+diff2;
-				}
-				else //move canvas
-				{
-					//m.p("drag move canvas");
-					dragType=DRAG_MOVE_CANVAS;
-					positionsCanvasMove[1]=e.getPoint();
-				}
-			}//end click in bottom halve
+		m.updateSelectionLabel();
 
-			panel.repaint();
+		panel.repaint();
 	}//end mouseDragged
 
 //=======================================================
@@ -694,6 +966,16 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		if(!m.haveValidFile)
 		{
 			return;
+		}
+
+		//right / context click test
+		if(e.getButton()==e.BUTTON3)
+		{
+			if(popup_menu==null)
+			{
+				popup_menu=new APopupMenu();
+			}
+			popup_menu.show(e.getComponent(), e.getX(), e.getY());
 		}
 
 		//only consider left mouse button
@@ -734,7 +1016,9 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		{
 			cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR); 
 			setCursor(cursor);
-		}		
+		}
+
+		m.updateSelectionLabel();
 	}
 
 //=======================================================
@@ -814,26 +1098,12 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 				//trim left (absolute minimum)
 				if(e.isShiftDown())
 				{
-					if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
-					{
-						positionsSelectionRange[0].x=positions[0].getPoint().x;
-					}
-					else
-					{
-						positionsSelectionRange[1].x=positions[0].getPoint().x;
-					}
+					trimSelectionRangeStart(positions[0].getPoint().x);
 				}
 				//trim right (absolute maximum)
 				else if(isControlOrMetaDown(e))
 				{
-					if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
-					{
-						positionsSelectionRange[1].x=positions[0].getPoint().x;
-					}
-					else
-					{
-						positionsSelectionRange[0].x=positions[0].getPoint().x;
-					}
+					trimSelectionRangeEnd(positions[0].getPoint().x);
 				}
 			}
 			else//bottom halve
@@ -844,36 +1114,17 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 				int diff=0;
 				if(e.isShiftDown())
 				{
-					if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
-					{
-						diff=positions[0].getPoint().x-positionsSelectionRange[0].x;
-					}
-					else
-					{
-						diff=positions[0].getPoint().x-positionsSelectionRange[1].x;
-					}
+					alignSelectionRangeStart(positions[0].getPoint().x);
 				}
 				//align absolute maximum
 				else if(isControlOrMetaDown(e))
 				{
-					if(positionsSelectionRange[0].x<=positionsSelectionRange[1].x)
-					{
-						diff=positions[0].getPoint().x-positionsSelectionRange[1].x;
-					}
-					else
-					{
-						diff=positions[0].getPoint().x-positionsSelectionRange[0].x;
-					}
+					alignSelectionRangeEnd(positions[0].getPoint().x);
 				}
-
-				//set new selection range value
-				positionsSelectionRange[0].x+=diff;
-				positionsSelectionRange[1].x+=diff;
 			}//end bottom halve
 		}//end click in place
 
 		singlePixelChange=true;
-
 		panel.repaint();
 	}//end mouseRelased
 
@@ -892,7 +1143,6 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		m.mousePositionInGraph.setText("Pos "+m.df.format(e.getPoint().x));
 
 		singlePixelChange=true;
-
 		panel.repaint();
 	}
 
@@ -907,11 +1157,14 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		//m.p("mouse exited");//+ e);
 		mouseInside=false;
 
+		//create dummy event, "park" mouse at 0,0
+		MouseEvent event=new MouseEvent(panel,0,0,0,0,0,0,0,0,false,MouseEvent.BUTTON1);
+		positions[2]=event;
+
 		////
 		m.mousePositionInGraph.setText("(Mouse outside)");
 
 		singlePixelChange=true;
-
 		panel.repaint();
 	}
 
@@ -1094,7 +1347,8 @@ when a component doesn't have focus.
 		{
 			return new Dimension(
 				(int)(m.width),
-				(int)this.getHeight()
+//				(int)this.getHeight()
+				(int)visibleRect.getHeight()
 			);
 		}
 
@@ -1142,7 +1396,6 @@ lookahead 1 segement to connect middle to middle
 				g.clearRect(0,0,this.getWidth(),this.getHeight());
 				clearDue=false;
 			}
-
 
 			if(dragOngoing && dragType==DRAG_MOVE_CANVAS && img!=null)
 			{
@@ -1320,10 +1573,10 @@ lookahead 1 segement to connect middle to middle
 				clearDue=false;
 			}
 
-			int sbHeight=0;
-			if(getHorizontalScrollBar().isVisible())
+			int bottomGap=0;
+			if(displayGrid)
 			{
-				sbHeight=getHorizontalScrollBar().getHeight();
+				bottomGap=16;
 			}
 
 			float waveHeightMax=0;
@@ -1331,14 +1584,14 @@ lookahead 1 segement to connect middle to middle
 			if(!displayMono)
 			{
 				//channels should never be 0 (div zero!)
-				waveHeightMax=(float) (( (visibleRect.getHeight()-sbHeight) /m.props.getChannels()) / 2);
+				waveHeightMax=(float) (( (visibleRect.getHeight()-bottomGap) /m.props.getChannels()) / 2);
 			}
 			else
 			{
-				waveHeightMax=(float) ( (visibleRect.getHeight()-sbHeight) / 2);
+				waveHeightMax=(float) ( (visibleRect.getHeight()-bottomGap) / 2);
 			}
 
-			float waveHeight=waveHeightMax*waveHeightFactor;
+			float waveHeight=waveHeightMax*(displayGap ? waveHeightFactor : 1);
 			float baseLineY=0;
 
 			final Graphics2D g2 = (Graphics2D) g;
@@ -1397,8 +1650,8 @@ lookahead 1 segement to connect middle to middle
 					drawSelectionRange(g2, scrollOffset, baseLineY, strokeChannelBackground);
 				}
 
-				//don't draw wave limits at small height
-				if(waveHeightMax>10)
+				//don't draw wave limits at small height or if turned off
+				if(waveHeightMax>10 && displayLimits)
 				{
 					//1
 					g2.setStroke(stroke1);
@@ -1430,4 +1683,33 @@ lookahead 1 segement to connect middle to middle
 			}
 		}//end paintComponent
 	}//end class GraphViewport
+//=======================================================
+	public class APopupMenu extends JPopupMenu implements PopupMenuListener
+	{
+		private JMenu menu;
+		//private static Main m;
+		public APopupMenu()
+		{
+			add(new JMenuItem("First Entry"));
+			add(new JButton("test me"));
+//			add(m.applicationMenu.getSelectionMenu());
+			addPopupMenuListener(this);
+		}
+
+		public void popupMenuWillBecomeVisible(PopupMenuEvent e)
+		{
+			m.p("will become visible");
+		}
+
+		public void popupMenuCanceled(PopupMenuEvent e)
+		{
+			m.p("popup cancelled");
+		}
+
+		public void popupMenuWillBecomeInvisible(PopupMenuEvent e)
+		{
+			m.p("will become invisible");
+			//removeAll();
+		}
+	}//end class APopupMenu
 }//end class WaveGraph
