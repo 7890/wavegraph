@@ -145,6 +145,7 @@ public class Main //implements Observer
 		df3.setDecimalFormatSymbols(symbols3);
 
 		applicationMenu=new AppMenu(this);
+		applicationMenu.setNoFileLoaded();
 		createGUI();
 		addListeners();
 		updateTimer.setInitialDelay(40);
@@ -186,6 +187,7 @@ public class Main //implements Observer
 	{
 		if(file==null || file.equals(""))
 		{
+			applicationMenu.setNoFileLoaded();
 			return;
 		}
 
@@ -200,6 +202,7 @@ public class Main //implements Observer
 
 				if(tmp==null)
 				{
+					applicationMenu.setNoFileLoaded();
 					return;
 				}
 				else
@@ -227,12 +230,14 @@ public class Main //implements Observer
 			{
 				currentFile=null;
 				haveValidFile=false;
+				applicationMenu.setNoFileLoaded();
 				return;
 			}
 
 			haveValidFile=true;
 //			infoPanelBottom.setVisible(true);
 
+			applicationMenu.setFileLoaded();
 			applicationMenu.addRecentFile(new File(currentFile));
 
 			updateGenericInfoLabel();

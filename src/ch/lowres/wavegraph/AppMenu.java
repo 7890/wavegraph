@@ -826,4 +826,18 @@ public class AppMenu extends JMenuBar
 		menu_view.addMenuListener(menuListener);
 		menu_help.addMenuListener(menuListener);
 	}//end addActionListeners
+
+//=======================================================
+	public void setNoFileLoaded()
+	{
+		sub_edit_selection.setEnabled(false);
+		sub_view_canvas.setEnabled(false);
+	}
+
+//=======================================================
+	public void setFileLoaded()
+	{
+		sub_edit_selection.setEnabled(true);
+		sub_view_canvas.setEnabled(true);		
+	}
 }//end class AppMenu
