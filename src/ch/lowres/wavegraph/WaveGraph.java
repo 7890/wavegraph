@@ -806,14 +806,14 @@ m.updateSelectionLabel();
 					final long bl=awb.block;
 					g2.setColor(Colors.wave_foreground.brighter());
 
-					if(!displayRectified && !displayFilled)
+					if(!displayRectified)
 					{
 						final float top=baseLineY-awb.avg*waveHeight;
 						final float bottom=baseLineY-next.avg*waveHeight;
 
 						g2.draw(new Line2D.Float(bl-offset, top, bl+1-offset, bottom));
 					}
-					else if(displayRectified && !displayFilled)
+					else if(displayRectified)
 					{
 						float absmax=Math.abs(awb.max);
 						float absmin=Math.abs(awb.min);
