@@ -242,7 +242,6 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		displayRectified=rectified;
 		img=null;
 		panel.repaint();
-
 	}
 
 //=======================================================
@@ -365,7 +364,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	{
 		positionsSelectionRange[0]=new Point(0,0);
 		positionsSelectionRange[1]=new Point(0,0);
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -375,7 +374,7 @@ m.updateSelectionLabel();
 	{
 		positionsSelectionRange[0].x=(int)scrollOffset;
 		positionsSelectionRange[1].x=(int)(scrollOffset+visibleRect.getWidth());
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -398,7 +397,7 @@ m.updateSelectionLabel();
 		{
 			positionsSelectionRange[1].x=newStartX;
 		}
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -421,7 +420,7 @@ m.updateSelectionLabel();
 		{
 			positionsSelectionRange[0].x=newEndX;
 		}
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -450,7 +449,7 @@ m.updateSelectionLabel();
 		positionsSelectionRange[0].x+=diff;
 		positionsSelectionRange[1].x+=diff;
 
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -479,7 +478,7 @@ m.updateSelectionLabel();
 		//set new selection range value
 		positionsSelectionRange[0].x+=diff;
 		positionsSelectionRange[1].x+=diff;
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -495,7 +494,7 @@ m.updateSelectionLabel();
 		{
 			positionsSelectionRange[0].x+=(positionsSelectionRange[0].x-positionsSelectionRange[1].x);
 		}
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -511,7 +510,7 @@ m.updateSelectionLabel();
 		{
 			positionsSelectionRange[0].x-=(int)((positionsSelectionRange[0].x-positionsSelectionRange[1].x)/2);
 		}
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -527,7 +526,7 @@ m.updateSelectionLabel();
 		{
 			positionsSelectionRange[1].x-=(positionsSelectionRange[0].x-positionsSelectionRange[1].x);
 		}
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -543,7 +542,7 @@ m.updateSelectionLabel();
 		{
 			positionsSelectionRange[1].x+=(int)((positionsSelectionRange[0].x-positionsSelectionRange[1].x)/2);
 		}
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 		singlePixelChange=true;
 		panel.repaint();
 	}
@@ -583,7 +582,7 @@ m.updateSelectionLabel();
 				panel.repaint();
 			}
 		}
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 	}//end nudgeSelectionRangeLeft
 
 //=======================================================
@@ -621,7 +620,7 @@ m.updateSelectionLabel();
 				panel.repaint();
 			}
 		}
-m.updateSelectionLabel();
+		m.updateSelectionLabel();
 	}//nudgeSelectionRangeRight
 
 //=======================================================
@@ -796,7 +795,7 @@ m.updateSelectionLabel();
 
 			//if high resolution == low sample per pixel value
 			//==connect avg points of blocks
-			if(awb.samples<512)
+			if(awb.samples<512 || displayRectified)
 			{
 				//look ahead as long as not last
 				if(i<=use.size()-1-m.props.getChannels())
@@ -806,14 +805,14 @@ m.updateSelectionLabel();
 					final long bl=awb.block;
 					g2.setColor(Colors.wave_foreground.brighter());
 
-					if(!displayRectified)
+					if(!displayRectified)//traditional
 					{
 						final float top=baseLineY-awb.avg*waveHeight;
 						final float bottom=baseLineY-next.avg*waveHeight;
 
 						g2.draw(new Line2D.Float(bl-offset, top, bl+1-offset, bottom));
 					}
-					else if(displayRectified)
+					else//rectified
 					{
 						float absmax=Math.abs(awb.max);
 						float absmin=Math.abs(awb.min);
@@ -833,7 +832,6 @@ m.updateSelectionLabel();
 						float avg_next=above;
 
 						g2.draw(new Line2D.Float(bl-offset, avg, bl+1-offset, avg_next));
-
 					}
 				}
 			}
