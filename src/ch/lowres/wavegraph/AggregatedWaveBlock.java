@@ -80,7 +80,7 @@ baseLineY-----------|-|----- displayed amplitude is max of abs(min), abs(max),  
 
 
 */
-		if(!displayRectified)
+		if(!displayRectified)//traditional
 		{
 			float above=baseLineY-max*waveHeight;
 			float below=baseLineY-min*waveHeight;
@@ -91,11 +91,11 @@ baseLineY-----------|-|----- displayed amplitude is max of abs(min), abs(max),  
 				below=above-1;
 			}
 
-			if(!displayFilled)
+			if(!displayFilled)//lines
 			{
 				g2.draw(new Line2D.Float(block+offsetX, below, block+offsetX, above));
 			}
-			else
+			else//filled
 			{
 				float minOrZero=min;
 				float maxOrZero=max;
@@ -113,22 +113,26 @@ baseLineY-----------|-|----- displayed amplitude is max of abs(min), abs(max),  
 				g2.draw(new Line2D.Float(block+offsetX, below, block+offsetX, above));
 			}
 		}
-		else
+		else //rectified view
 		{
 			float absmax=Math.abs(max);
 			float absmin=Math.abs(min);
 			float amplitude=Math.max(absmax,absmin)*waveHeight*2;
 
-			float below=baseLineY+waveHeight;
-			float above=below-amplitude;
-
-			if(displayFilled)
+			if(!displayFilled)//lines
 			{
+				float above=baseLineY+waveHeight-amplitude;
+				float below=above-Math.abs(max-min);
+
 				g2.draw(new Line2D.Float(block+offsetX, below, block+offsetX, above));
 			}
-			else
+			else//filled
 			{
-				g2.draw(new Line2D.Float(block+offsetX, above, block+offsetX, above-1));
+
+				float below=baseLineY+waveHeight;
+				float above=below-amplitude;
+
+				g2.draw(new Line2D.Float(block+offsetX, below, block+offsetX, above));
 			}
 		}
 	}//end paint
