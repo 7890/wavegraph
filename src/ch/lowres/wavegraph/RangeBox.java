@@ -35,7 +35,7 @@ public class RangeBox extends JPanel
 	private void createGUI()
 	{
 		setLayout(new GridLayout(4,1));
-		setPreferredSize(new Dimension(110,70));
+		setPreferredSize(new Dimension(125,70));
 		setOpaque(true);
 
 		label_caption.setOpaque(true);
@@ -47,6 +47,15 @@ public class RangeBox extends JPanel
 		add(label_end);
 		add(label_length);
 		add(label_caption);
+	}
+
+//=======================================================
+	public void resetFont(Font f)
+	{
+		label_start.setFont(f);
+		label_end.setFont(f);
+		label_length.setFont(f);
+		label_caption.setFont(f.deriveFont(10f));
 	}
 
 //=======================================================

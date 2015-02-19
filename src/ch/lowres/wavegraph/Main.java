@@ -23,7 +23,7 @@ public class Main //implements Observer
 {
 	public final static String progName="Wavegraph";
 	public final static String progHome="https://github.com/7890/wavegraph";
-	public final static String progVersion="0.000e";
+	public final static String progVersion="0.000f";
 
 	public static JFrame mainframe=new JFrame();
 	public static Image appIcon=createImageFromJar("/resources/images/wavegraph_icon.png");
@@ -144,13 +144,18 @@ public class Main //implements Observer
 		symbols3.setGroupingSeparator(' ');
 		df3.setDecimalFormatSymbols(symbols3);
 
+		Fonts.init();
+
 		applicationMenu=new AppMenu(this);
 		applicationMenu.setNoFileLoaded();
 		createGUI();
 		addListeners();
 		updateTimer.setInitialDelay(40);
-
 		resetAllLabels();
+//test
+		Fonts.change(mainframe);
+		Fonts.change(about);
+		about.updateText();
 		mainframe.show();
 
 		//processFile(file);
