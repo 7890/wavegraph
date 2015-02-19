@@ -74,6 +74,27 @@ function compile_wavegraph()
 }
 
 #========================================================================
+function handle_ubuntu_font
+{
+	mkdir -p "$classes"/resources/fonts
+	mkdir -p "$classes"/resources/licenses/ubuntu-font-family
+
+	cp "$archive"/ubuntu-font-family-0.80.zip "$build"
+	cd "$build"
+	unzip ubuntu-font-family-0.80.zip
+	cd "$cur"
+
+#	cp "$build"/ubuntu-font-family-0.80/Ubuntu-C.ttf "$classes"/resources/fonts/Ubuntu-C.ttf
+	cp "$build"/ubuntu-font-family-0.80/UbuntuMono-R.ttf "$classes"/resources/fonts/
+
+	cp "$build"/ubuntu-font-family-0.80/LICENCE-FAQ.txt "$classes"/resources/licenses/ubuntu-font-family
+	cp "$build"/ubuntu-font-family-0.80/copyright.txt "$classes"/resources/licenses/ubuntu-font-family
+	cp "$build"/ubuntu-font-family-0.80/README.txt "$classes"/resources/licenses/ubuntu-font-family
+	cp "$build"/ubuntu-font-family-0.80/TRADEMARKS.txt "$classes"/resources/licenses/ubuntu-font-family
+	cp "$build"/ubuntu-font-family-0.80/LICENCE.txt "$classes"/resources/licenses/ubuntu-font-family
+}
+
+#========================================================================
 function build_jar
 {
 	echo "creating wavegraph application jar (wavegraph_xxx.jar)"
@@ -82,12 +103,13 @@ function build_jar
 	cur="`pwd`"
 
 #	mkdir -p "$classes"/resources/etc
-#	mkdir -p "$classes"/resources/fonts
 	mkdir -p "$classes"/resources/images
 
 	cp "$src"/gfx/wavegraph_icon.png "$classes"/resources/images
 	cp "$src"/gfx/wavegraph_splash_screen.png "$classes"/resources/images
 	cp "$src"/gfx/wavegraph_about_screen.png "$classes"/resources/images
+
+	handle_ubuntu_font
 
 	echo "Manifest-Version: 1.0" > "$build"/Manifest.txt
 	echo "SplashScreen-Image: resources/images/wavegraph_splash_screen.png" >> "$build"/Manifest.txt
