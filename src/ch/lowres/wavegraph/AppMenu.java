@@ -9,12 +9,14 @@ import javax.swing.event.*;
 
 import java.io.*;
 import java.util.*;
+//import sun.awt.X11.XClipboard;
 
 public class AppMenu extends JMenuBar
 {
 	private static JMenu menu_file=new JMenu("File");
 
 	private static JMenuItem mi_open_file=new JMenuItem("Open...");
+	private static JMenuItem mi_open_file_clipboard=new JMenuItem("Open Clipboard URI...");
 
 	private static JMenu sub_file_recent=new JMenu("Recent");
 	private static int maxRecentEntries=15;
@@ -142,6 +144,7 @@ public class AppMenu extends JMenuBar
 			KeyStroke.getKeyStroke(KeyEvent.VK_Q, m.ctrlOrCmd));
 
 		menu_file.add(mi_open_file);
+		menu_file.add(mi_open_file_clipboard);
 
 		for(int i=0;i<maxRecentEntries;i++)
 		{
@@ -367,6 +370,19 @@ public class AppMenu extends JMenuBar
 				m.mainframe.toFront();
 			}
 		});
+
+		mi_open_file_clipboard.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				String clipboardString=m.getStringFromClipboard();
+				if(clipboardString!=null && clipboardString.length()>0)
+				{
+					m.processFile(clipboardString);
+				}
+			}
+		});
+
 /*
 		mi_save_image.addActionListener(new ActionListener()
 		{
