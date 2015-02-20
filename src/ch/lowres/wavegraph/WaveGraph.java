@@ -976,6 +976,14 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 			popup_menu.show(e.getComponent(), e.getX(), e.getY());
 		}
 
+		//middle click test -> try to load from primary x11 selection
+		if(e.getButton()==e.BUTTON2)
+		{
+			m.p("using primary x11 selection to load new file");
+			m.processFile(m.getStringFromPrimaryX11Selection());
+			return;
+		}
+
 		//only consider left mouse button
 		if(e.getButton()!=e.BUTTON1)
 		{
