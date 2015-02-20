@@ -16,6 +16,10 @@ import java.util.*;
 
 import java.text.*;
 
+import java.awt.datatransfer.*;
+import java.awt.Toolkit;
+
+//import java.lang.reflect.*;
 //import javax.swing.plaf.basic.BasicScrollBarUI;
 
 //=======================================================
@@ -23,7 +27,7 @@ public class Main //implements Observer
 {
 	public final static String progName="Wavegraph";
 	public final static String progHome="https://github.com/7890/wavegraph";
-	public final static String progVersion="0.000f";
+	public final static String progVersion="0.000g";
 
 	public static JFrame mainframe=new JFrame();
 	public static Image appIcon=createImageFromJar("/resources/images/wavegraph_icon.png");
@@ -108,8 +112,8 @@ public class Main //implements Observer
 		p(progHome);
 
 		p("");
-		p("command line argument: (1) file to load");
-		p("if no argument is given, a file dialog will be presented.");
+		p("command line argument (optional): (1) file to load");
+		p("if file is directory, a file chooser dialog will be shown.");
 
 		p("");
 		p("Build Info:");
@@ -426,6 +430,12 @@ public class Main //implements Observer
 		}
 		else
 		{
+			rangebox_selFrames.setStart(graph.positionsSelectionRange[1].x*scanner.getBlockSize());
+			rangebox_selFrames.setEnd(graph.positionsSelectionRange[0].x*scanner.getBlockSize());
+			rangebox_selFrames.setLength(
+				(graph.positionsSelectionRange[0].x-graph.positionsSelectionRange[1].x)
+					*scanner.getBlockSize());
+
 			rangebox_selPixels.setStart(graph.positionsSelectionRange[1].x);
 			rangebox_selPixels.setEnd(graph.positionsSelectionRange[0].x);
 			rangebox_selPixels.setLength(graph.positionsSelectionRange[0].x-graph.positionsSelectionRange[1].x);
@@ -615,6 +625,73 @@ public class Main //implements Observer
 	}
 
 //========================================================================
+	public static String getStringFromPrimaryX11Selection()
+	{
+		//https://bugs.eclipse.org/bugs/show_bug.cgi?id=44233
+		java.awt.datatransfer.Clipboard cb
+			=java.awt.Toolkit.getDefaultToolkit().getSystemSelection();
+
+		if(cb==null)
+		{
+			w("could not get system clipboard");
+		}
+		else
+		{
+			java.awt.datatransfer.Transferable tfb=cb.getContents(null);
+			if(!tfb.isDataFlavorSupported(DataFlavor.stringFlavor))
+			{
+				w("current X11 selection can not be formatted as string...");
+			}
+			else
+			{
+				String data=null;
+				try
+				{
+					data=(String)tfb.getTransferData(DataFlavor.stringFlavor);
+				}
+				catch (Exception e)
+				{
+					w("could not convert X11 seleciton to a string.");
+				}
+				if(data!=null && data.length()>0)
+				{
+					p("X11 selection is: "+data);
+					String[] lines=data.split(System.getProperty("line.separator"));
+					return lines[0];
+				}
+			}
+		}//else clipboard not null
+		return null;
+	}//end getStringFromPrimaryX11Selection
+
+//========================================================================
+//http://www.javapractices.com/topic/TopicAction.do?Id=82
+	public static String getStringFromClipboard()
+	{
+		String result = null;
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+
+		//odd: the Object param of getContents is not currently used
+		Transferable contents = clipboard.getContents(null);
+		boolean hasTransferableText=(contents != null) && contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+		if (hasTransferableText)
+		{
+			try
+			{
+				result=(String)contents.getTransferData(DataFlavor.stringFlavor);
+				String[] lines=result.split(System.getProperty("line.separator"));
+				result=lines[0];
+			}
+			catch (Exception e)
+			{
+				w("could not read string from clipboard.");
+				//e.printStackTrace();
+			}
+		}
+		return result;
+	}// end getStringFromClipboard
+
+//========================================================================
 	private static void addGlobalKeyListeners()
 	{
 		JRootPane rootPane = mainframe.getRootPane();
@@ -783,6 +860,34 @@ public class Main //implements Observer
 			public void actionPerformed(ActionEvent e)
 			{
 				graph.nudgeSelectionRangeRight();
+			}
+		});
+
+		//shift insert uri from primary x11 selection
+		KeyStroke keyShiftInsert = KeyStroke.getKeyStroke(KeyEvent.VK_INSERT,ActionEvent.SHIFT_MASK);
+		actionMap.put(keyShiftInsert, new AbstractAction("SHIFT_INSERT") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				String clipboardString=getStringFromPrimaryX11Selection();
+				if(clipboardString!=null && clipboardString.length()>0)
+				{
+					processFile(clipboardString);
+				}
+			}
+		});
+
+		//ctrl + v uri from clipboard
+		KeyStroke keyCtrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V,ctrlOrCmd);
+		actionMap.put(keyCtrlV, new AbstractAction("CTRL_V") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				String clipboardString=getStringFromClipboard();
+				if(clipboardString!=null && clipboardString.length()>0)
+				{
+					processFile(clipboardString);
+				}
 			}
 		});
 
