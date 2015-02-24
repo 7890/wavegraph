@@ -35,6 +35,7 @@ class WaveScanner extends Observable implements Runnable
 
 	private WaveGraph graph;
 
+//=======================================================
 	public WaveScanner(WaveGraph graph)
 	{
 		this.graph=graph;
@@ -59,6 +60,12 @@ class WaveScanner extends Observable implements Runnable
 	{
 		filename=file;
 		readHeader();
+		return props;
+	}
+
+//=======================================================
+	public WaveProperties getProps()
+	{
 		return props;
 	}
 

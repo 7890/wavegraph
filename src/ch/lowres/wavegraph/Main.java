@@ -27,7 +27,7 @@ public class Main //implements Observer
 {
 	public final static String progName="Wavegraph";
 	public final static String progHome="https://github.com/7890/wavegraph";
-	public final static String progVersion="0.000g";
+	public final static String progVersion="0.000h";
 
 	public static JFrame mainframe=new JFrame();
 	public static Image appIcon=createImageFromJar("/resources/images/wavegraph_icon.png");
@@ -77,20 +77,15 @@ public class Main //implements Observer
 	public static OSTest os=new OSTest();
 
 	public static String currentFile=null;
-	public static boolean haveValidFile=false;
 
 	public static AboutDialog about;
-
-//graph
-	public static long width=0;
 
 	public static int windowWidth=0;
 	public static int windowHeight=0;
 
 	public static WaveGraph graph;
-	public static WaveScanner scanner;
 	public static WaveProperties props;
-	public static WaveScannerObserver scanObserver;
+	public static GraphObserver graphObserver;
 
 	//map containing all global key actions
 	public static HashMap<KeyStroke, Action> actionMap = new HashMap<KeyStroke, Action>();
@@ -156,13 +151,12 @@ public class Main //implements Observer
 		addListeners();
 		updateTimer.setInitialDelay(40);
 		resetAllLabels();
-//test
+
 		Fonts.change(mainframe);
 		Fonts.change(about);
 		about.updateText();
-		mainframe.show();
 
-		//processFile(file);
+		mainframe.show();
 	}//end constructor
 
 //=======================================================
@@ -224,27 +218,17 @@ public class Main //implements Observer
 				currentFile=new File(file).getAbsolutePath();
 			}
 
-			haveValidFile=false;
-//			infoPanelBottom.setVisible(false);
-
-			scanner.abort();
 			updateTimer.stop();
 			graph.clear();
-			System.gc();
-			width=0;
 			resetAllLabels();
 
-			props=scanner.getProps(currentFile);
+			props=graph.scanner.getProps(currentFile);
 			if(!props.isValid())
 			{
 				currentFile=null;
-				haveValidFile=false;
 				applicationMenu.setNoFileLoaded();
 				return;
 			}
-
-			haveValidFile=true;
-//			infoPanelBottom.setVisible(true);
 
 			applicationMenu.setFileLoaded();
 			applicationMenu.addRecentFile(new File(currentFile));
@@ -258,17 +242,17 @@ public class Main //implements Observer
 			//some auto logic for now
 			//target size for whole file: 4 x windowWidth
 			//only natural / exact, >=1 FPP frames per pixel value possible
-			width=windowWidth*128;
+			long graphWidth=windowWidth*128;
 
 			//resolution greater than 1 sample per pixel missing
-			if(width>props.getFrameCount())
+			if(graphWidth>props.getFrameCount())
 			{
-				width=props.getFrameCount();
+				graphWidth=props.getFrameCount();
 			}
 
 			//start work
-			scanner.scanData(width);
-			//scanner.scanData((long)(props.getFrameCount()/2),(long)(props.getFrameCount()/2),width);
+			graph.scanner.scanData(graphWidth);
+			//scanner.scanData((long)(props.getFrameCount()/2),(long)(props.getFrameCount()/2),graphWidth);
 
 			SwingUtilities.invokeLater(new Runnable()
 			{
@@ -354,8 +338,7 @@ public class Main //implements Observer
 
 		//the main things to do 
 		graph=new WaveGraph();
-		scanner=new WaveScanner(graph);
-		scanObserver=new WaveScannerObserver();
+		graphObserver=new GraphObserver(graph);
 
 		mainframe.add(infoPanelTop, BorderLayout.NORTH);
 		mainframe.add(graph, BorderLayout.CENTER);
@@ -368,6 +351,11 @@ public class Main //implements Observer
 //========================================================================
 	public static void updateGenericInfoLabel()
 	{
+		if(props==null || !props.isValid())
+		{
+			return;
+		}
+
 		//p("update generic info label");
 
 		String channelLabel="";
@@ -397,79 +385,64 @@ public class Main //implements Observer
 //========================================================================
 	public static void updateSelectionLabel()
 	{
-		if(graph.positionsSelectionRange[0].x<=graph.positionsSelectionRange[1].x )
+		if(props==null || !props.isValid())
 		{
-			rangebox_selFrames.setStart(graph.positionsSelectionRange[0].x*scanner.getBlockSize());
-			rangebox_selFrames.setEnd(graph.positionsSelectionRange[1].x*scanner.getBlockSize());
-			rangebox_selFrames.setLength(
-				(graph.positionsSelectionRange[1].x-graph.positionsSelectionRange[0].x)
-					*scanner.getBlockSize());
-
-			rangebox_selPixels.setStart(graph.positionsSelectionRange[0].x);
-			rangebox_selPixels.setEnd(graph.positionsSelectionRange[1].x);
-			rangebox_selPixels.setLength(graph.positionsSelectionRange[1].x-graph.positionsSelectionRange[0].x);
-
-			rangebox_selHMS.setStart(
-				"S: "+
-				props.getDurationString( 
-					(long)(graph.positionsSelectionRange[0].x*scanner.getBlockSize()))
-			);
-
-			rangebox_selHMS.setEnd(
-				"E: "+
-				props.getDurationString( 
-					(long)(graph.positionsSelectionRange[1].x*scanner.getBlockSize()))
-			);
-
-			rangebox_selHMS.setLength(
-				"L: "+
-				props.getDurationString( 
-					(long)(graph.positionsSelectionRange[1].x-graph.positionsSelectionRange[0].x)
-						*scanner.getBlockSize())
-			);
+			return;
 		}
-		else
-		{
-			rangebox_selFrames.setStart(graph.positionsSelectionRange[1].x*scanner.getBlockSize());
-			rangebox_selFrames.setEnd(graph.positionsSelectionRange[0].x*scanner.getBlockSize());
-			rangebox_selFrames.setLength(
-				(graph.positionsSelectionRange[0].x-graph.positionsSelectionRange[1].x)
-					*scanner.getBlockSize());
 
-			rangebox_selPixels.setStart(graph.positionsSelectionRange[1].x);
-			rangebox_selPixels.setEnd(graph.positionsSelectionRange[0].x);
-			rangebox_selPixels.setLength(graph.positionsSelectionRange[0].x-graph.positionsSelectionRange[1].x);
+		Point[] sel=graph.getSelectionRange();
 
-			rangebox_selHMS.setStart(
-				"S: "+
-				props.getDurationString( 
-					(long)(graph.positionsSelectionRange[1].x*scanner.getBlockSize()))
-			);
+		rangebox_selFrames.setStart(sel[0].x*graph.scanner.getBlockSize());
+		rangebox_selFrames.setEnd(sel[1].x*graph.scanner.getBlockSize());
+		rangebox_selFrames.setLength(
+			(sel[1].x-sel[0].x)
+				*graph.scanner.getBlockSize());
 
-			rangebox_selHMS.setEnd(
-				"E: "+
-				props.getDurationString( 
-					(long)(graph.positionsSelectionRange[0].x*scanner.getBlockSize()))
-			);
+		rangebox_selPixels.setStart(sel[0].x);
+		rangebox_selPixels.setEnd(sel[1].x);
+		rangebox_selPixels.setLength(sel[1].x-sel[0].x);
 
-			rangebox_selHMS.setLength(
-				"L: "+
-				props.getDurationString( 
-					(long)(graph.positionsSelectionRange[0].x-graph.positionsSelectionRange[1].x)
-						*scanner.getBlockSize())
-			);
-		}
+		rangebox_selHMS.setStart(
+			"S: "+
+			props.getDurationString( 
+				(long)(sel[0].x*graph.scanner.getBlockSize()))
+		);
+
+		rangebox_selHMS.setEnd(
+			"E: "+
+			props.getDurationString( 
+				(long)(sel[1].x*graph.scanner.getBlockSize()))
+		);
+
+		rangebox_selHMS.setLength(
+			"L: "+
+			props.getDurationString( 
+				(long)(sel[1].x-sel[0].x)*graph.scanner.getBlockSize())
+		);
 	}//end updateSelectionLabel
+
+
+//========================================================================
+	public static void updateViewportInfoLabel()
+	{
+
+		viewPortInfoLabel1.setText(
+			df.format(graph.scanner.getBlockSize())+" FPP, "
+			+df.format(graph.getGraphWidth())
+			+" Pixels"
+		);
+		p("frames per pixel: "+graph.scanner.getBlockSize()+", frames to scan: "+graph.scanner.getCycles());
+	}
 
 //========================================================================
 	public static void updateViewportLabel()
 	{
-		//p("update viewport label");
+		if(props==null || !props.isValid())
+		{
+			return;
+		}
 
-/*		viewPortInfoLabel2.setText(" |  Viewport: "+df.format(visibleRect.getWidth())
-		+" / "+df.format(width)
-		+" Pixels");
-*/
+		//p("update viewport label");
 
 		rangebox_vpPixels.setStart(graph.scrollOffset);
 		rangebox_vpPixels.setEnd(graph.scrollOffset+graph.visibleRect.getWidth());
@@ -478,13 +451,13 @@ public class Main //implements Observer
 		rangebox_vpHMS.setStart(
 			"S: "+
 			props.getDurationString( 
-				(long)(graph.scrollOffset*scanner.getBlockSize()))
+				(long)(graph.scrollOffset*graph.scanner.getBlockSize()))
 		);
 
 		rangebox_vpHMS.setLength(
 			"L: "+
 			props.getDurationString( 
-				(long)graph.visibleRect.getWidth()*scanner.getBlockSize())
+				(long)graph.visibleRect.getWidth()*graph.scanner.getBlockSize())
 		);
 
 
@@ -495,7 +468,7 @@ public class Main //implements Observer
 			rangebox_vpHMS.setEnd(
 				"E: "+
 				props.getDurationString(
-					(long)(scanner.getCycles()))
+					(long)(graph.scanner.getCycles()))
 			);
 		}
 		else
@@ -503,7 +476,7 @@ public class Main //implements Observer
 			rangebox_vpHMS.setEnd(
 				"E: "+
 				props.getDurationString( 
-					(long)((graph.scrollOffset+graph.visibleRect.getWidth())*scanner.getBlockSize()))
+					(long)((graph.scrollOffset+graph.visibleRect.getWidth())*graph.scanner.getBlockSize()))
 			);
 		}
 	}//end updateViewportLabel
@@ -516,7 +489,7 @@ public class Main //implements Observer
 			public void actionPerformed(ActionEvent e)
 			{
 				buttonAbort.setEnabled(false);
-				scanner.abort();
+				graph.scanner.abort();
 			}
 		});
 
@@ -524,7 +497,7 @@ public class Main //implements Observer
 		{
 			public void componentResized(ComponentEvent evt)
 			{
-				if(haveValidFile)
+				if(props!=null && props.isValid())
 				{
 					Component c = (Component)evt.getSource();
 					//p("resized");
@@ -543,7 +516,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				if(haveValidFile)
+				if(props!=null && props.isValid())
 				{
 					//p("==timer action");
 					graph.scrollOffset=graph.scrollbar.getValue();
@@ -563,7 +536,6 @@ public class Main //implements Observer
 
 		addDnDSupport();
 		addGlobalKeyListeners();
-		scanner.addObserver(scanObserver);
 	}
 
 //=======================================================
@@ -707,7 +679,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.scrollLeft(1);
+				graph.scrollBackward(1);
 			}
 		});
 
@@ -717,7 +689,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.scrollLeft(4);
+				graph.scrollBackward(4);
 			}
 		});
 
@@ -727,7 +699,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.scrollLeft(16);
+				graph.scrollBackward(16);
 			}
 		});
 
@@ -738,7 +710,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.scrollLeft(64);
+				graph.scrollBackward(64);
 			}
 		});
 
@@ -748,7 +720,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.scrollRight(1);
+				graph.scrollForward(1);
 			}
 		});
 
@@ -758,7 +730,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.scrollRight(4);
+				graph.scrollForward(4);
 			}
 		});
 
@@ -768,7 +740,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.scrollRight(16);
+				graph.scrollForward(16);
 			}
 		});
 
@@ -779,7 +751,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.scrollRight(64);
+				graph.scrollForward(64);
 			}
 		});
 
@@ -809,7 +781,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.doubleSelectionRangeRight();
+				graph.doubleSelectionRangeEnd();
 			}
 		});
 
@@ -819,7 +791,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.halveSelectionRangeRight();
+				graph.halveSelectionRangeEnd();
 			}
 		});
 
@@ -829,7 +801,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.halveSelectionRangeLeft();
+				graph.halveSelectionRangeStart();
 			}
 		});
 
@@ -839,7 +811,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.doubleSelectionRangeLeft();
+				graph.doubleSelectionRangeStart();
 			}
 		});
 
@@ -849,7 +821,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.nudgeSelectionRangeLeft();
+				graph.nudgeSelectionRangeBackward();
 			}
 		});
 
@@ -859,7 +831,7 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				graph.nudgeSelectionRangeRight();
+				graph.nudgeSelectionRangeForward();
 			}
 		});
 

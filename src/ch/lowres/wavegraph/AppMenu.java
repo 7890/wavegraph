@@ -16,7 +16,7 @@ public class AppMenu extends JMenuBar
 	private static JMenu menu_file=new JMenu("File");
 
 	private static JMenuItem mi_open_file=new JMenuItem("Open...");
-	private static JMenuItem mi_open_file_clipboard=new JMenuItem("Open Clipboard URI...");
+	private static JMenuItem mi_open_file_clipboard=new JMenuItem("Open File URI From Clipboard");
 
 	private static JMenu sub_file_recent=new JMenu("Recent");
 	private static int maxRecentEntries=15;
@@ -428,7 +428,7 @@ public class AppMenu extends JMenuBar
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				m.graph.doubleSelectionRangeLeft();
+				m.graph.doubleSelectionRangeStart();
 			}
 		});
 
@@ -436,7 +436,7 @@ public class AppMenu extends JMenuBar
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				m.graph.halveSelectionRangeLeft();
+				m.graph.halveSelectionRangeStart();
 			}
 		});
 
@@ -452,7 +452,7 @@ public class AppMenu extends JMenuBar
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				m.graph.doubleSelectionRangeRight();
+				m.graph.doubleSelectionRangeEnd();
 			}
 		});
 
@@ -460,7 +460,7 @@ public class AppMenu extends JMenuBar
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				m.graph.halveSelectionRangeRight();
+				m.graph.halveSelectionRangeEnd();
 			}
 		});
 
@@ -484,7 +484,7 @@ public class AppMenu extends JMenuBar
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				m.graph.nudgeSelectionRangeRight();
+				m.graph.nudgeSelectionRangeForward();
 			}
 		});
 
@@ -492,7 +492,7 @@ public class AppMenu extends JMenuBar
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				m.graph.nudgeSelectionRangeLeft();
+				m.graph.nudgeSelectionRangeBackward();
 			}
 		});
 
