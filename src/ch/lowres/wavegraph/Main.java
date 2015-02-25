@@ -34,6 +34,7 @@ public class Main //implements Observer
 
 	public static AppMenu applicationMenu;
 
+	//north
 	public static JPanel infoPanelTop=new JPanel(new WrapLayout(WrapLayout.LEFT));
 	public static JLabel genericInfoLabel=new JLabel("");
 	public static JLabel durationLabel=new JLabel("");
@@ -47,31 +48,24 @@ public class Main //implements Observer
 		}
 	};
 
+	//south
 	public static JPanel infoPanelBottom=new JPanel(new WrapLayout(WrapLayout.RIGHT));
-	public static JPanel infoPanelBottomViewportGroup=new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-	public static JPanel infoPanelBottomGroup0=new JPanel(new GridLayout(3,1));
+//	public static JPanel infoPanelBottomGroup0=new JPanel(new GridLayout(3,1));
 	public static JLabel viewPortInfoLabel1=new JLabel("");
-	public static JLabel mousePositionInGraph=new JLabel("");
 
-	public static RangeBox rangebox_vpPixels=new RangeBox("Viewport Pixels");
-	public static RangeBox rangebox_vpHMS=new RangeBox("Viewport H:M:S");
+	public static RangeBox rangebox_Mousepoint=new RangeBox("Mouse");
+
+	public static RangeBox rangebox_Editpoint=new RangeBox("Editpoint");
+
 	public static RangeBox rangebox_selFrames=new RangeBox("Selection Frames");
 	public static RangeBox rangebox_selPixels=new RangeBox("Selection Pixels");
 	public static RangeBox rangebox_selHMS=new RangeBox("Selection H:M:S");
 
+	public static RangeBox rangebox_vpFrames=new RangeBox("Viewport Frames");
+	public static RangeBox rangebox_vpPixels=new RangeBox("Viewport Pixels");
+	public static RangeBox rangebox_vpHMS=new RangeBox("Viewport H:M:S");
 
-/*
-	public static JPanel infoPanelBottomSelectionGroup1=new JPanel(new FlowLayout(FlowLayout.LEFT));
-	public static JLabel infoPanelBottomGroup3Caption=new JLabel("Selection Pixels",JLabel.CENTER);
-	public static JLabel infoPanelBottomGroup4Caption=new JLabel("Selection H:M:S",JLabel.CENTER);
-	public static JPanel infoPanelBottomSelectionGroup2=new JPanel(new FlowLayout(FlowLayout.LEFT));
-	public static JLabel infoPanelBottomGroup5Caption=new JLabel("Selection Frames",JLabel.CENTER);
-	public static JLabel infoPanelBottomGroup6Caption=new JLabel("Selection Bytes",JLabel.CENTER);
-	public static JPanel infoPanelBottomMiscGroup=new JPanel(new FlowLayout(FlowLayout.LEFT));
-	public static JLabel infoPanelBottomGroup7Caption=new JLabel("Edit Point",JLabel.CENTER);
-	public static JLabel infoPanelBottomGroup8Caption=new JLabel("Mouse",JLabel.CENTER);
-*/
 
 	public static int ctrlOrCmd=InputEvent.CTRL_MASK;
 	public static OSTest os=new OSTest();
@@ -182,12 +176,15 @@ public class Main //implements Observer
 
 		//force bottom panel to have size as with labels
 		viewPortInfoLabel1.setText("");//Open File via Menu or Drag & Drop in Window");
-		mousePositionInGraph.setText("");
 	}
 
 //=======================================================
 	public static void processFile(String file)
 	{
+		resetAllLabels();
+		updateTimer.stop();
+		graph.clear();
+
 		if(file==null || file.equals(""))
 		{
 			applicationMenu.setNoFileLoaded();
@@ -218,10 +215,6 @@ public class Main //implements Observer
 				currentFile=new File(file).getAbsolutePath();
 			}
 
-			updateTimer.stop();
-			graph.clear();
-			resetAllLabels();
-
 			props=graph.scanner.getProps(currentFile);
 			if(!props.isValid())
 			{
@@ -236,6 +229,8 @@ public class Main //implements Observer
 			updateGenericInfoLabel();
 			updateSelectionLabel();
 			updateViewportLabel();
+			updateEditPointLabel();
+			updateMousePointLabel();
 
 			mainframe.setTitle(progName+" - "+currentFile);
 
@@ -286,30 +281,24 @@ public class Main //implements Observer
 		infoPanelBottom.setOpaque(true);
 		infoPanelBottom.setBackground(Colors.infopanel_background);
 
-		infoPanelBottomViewportGroup.setOpaque(false);
-//		infoPanelBottomSelectionGroup1.setOpaque(false);
-//		infoPanelBottomSelectionGroup2.setOpaque(false);
-//		infoPanelBottomMiscGroup.setOpaque(false);
+		//infoPanelBottomGroup0.setOpaque(false);
+		//infoPanelBottomGroup0.setPreferredSize(new Dimension(200,70));
 
-		infoPanelBottomGroup0.setOpaque(false);
-		infoPanelBottomGroup0.setPreferredSize(new Dimension(200,70));
-/*
-		JPanel spacer=new JPanel(new GridLayout(3,1));
-		spacer.add(new JLabel(" "));
-		spacer.add(new JLabel(" "));
-		spacer.add(new JLabel(" "));
-		spacer.setOpaque(false);
-*/
+		//north
 		infoPanelTop.add(genericInfoLabel);
 		infoPanelTop.add(durationLabel);
+		infoPanelTop.add(viewPortInfoLabel1);
 		infoPanelTop.add(scanProgressLabel);
 		infoPanelTop.add(buttonAbort);
 
-		infoPanelBottomGroup0.add(viewPortInfoLabel1);
-		infoPanelBottomGroup0.add(mousePositionInGraph);
+		//south
+		//mouse
+		infoPanelBottom.add(rangebox_Mousepoint);
 
-		infoPanelBottom.add(infoPanelBottomGroup0);
+		//editpoint
+		infoPanelBottom.add(rangebox_Editpoint);
 
+		//selection
 		rangebox_selFrames.setFormat(df3);
 		infoPanelBottom.add(rangebox_selFrames);
 
@@ -318,13 +307,14 @@ public class Main //implements Observer
 
 		infoPanelBottom.add(rangebox_selHMS);
 
-		rangebox_vpPixels.setFormat(df3);		
-		infoPanelBottomViewportGroup.add(rangebox_vpPixels);
+		//viewport
+		rangebox_vpFrames.setFormat(df3);
+		infoPanelBottom.add(rangebox_vpFrames);
 
-		infoPanelBottomViewportGroup.add(rangebox_vpHMS);
+		rangebox_vpPixels.setFormat(df3);
+		infoPanelBottom.add(rangebox_vpPixels);
 
-		infoPanelBottom.add(infoPanelBottomViewportGroup);
-
+		infoPanelBottom.add(rangebox_vpHMS);
 
 		Dimension screenDimension=Toolkit.getDefaultToolkit().getScreenSize();
 		Insets insets=Toolkit.getDefaultToolkit().getScreenInsets(mainframe.getGraphicsConfiguration());
@@ -421,12 +411,69 @@ public class Main //implements Observer
 		);
 	}//end updateSelectionLabel
 
+//========================================================================
+	public static void updateMousePointLabel(String label)
+	{
+		rangebox_Mousepoint.setStart(label);
+		rangebox_Mousepoint.setEnd("");
+		rangebox_Mousepoint.setLength("");
+	}
+
+//========================================================================
+	public static void updateMousePointLabel()
+	{
+		if(props==null || !props.isValid())
+		{
+			return;
+		}
+
+		Point m=graph.getMousePoint();
+
+		//frames
+		rangebox_Mousepoint.setStart("F:  "+
+			df3.format(m.x*graph.scanner.getBlockSize())
+		);
+		//pixels
+		rangebox_Mousepoint.setEnd("P:  "+
+			df3.format(m.x)
+		);
+		//hms
+		rangebox_Mousepoint.setLength("H: "+
+			props.getDurationString(
+				(long)m.x*graph.scanner.getBlockSize())
+		);
+	}
+
+//========================================================================
+	public static void updateEditPointLabel()
+	{
+		if(props==null || !props.isValid())
+		{
+			return;
+		}
+
+		Point ep=graph.getEditPoint();
+
+		//frames
+		rangebox_Editpoint.setStart("F:  "+
+			df3.format(ep.x*graph.scanner.getBlockSize())
+		);
+		//pixels
+		rangebox_Editpoint.setEnd("P:  "+
+			df3.format(ep.x)
+		);
+		//hms
+		rangebox_Editpoint.setLength("H: "+
+			props.getDurationString(
+				(long)ep.x*graph.scanner.getBlockSize())
+		);
+	}
 
 //========================================================================
 	public static void updateViewportInfoLabel()
 	{
 
-		viewPortInfoLabel1.setText(
+		viewPortInfoLabel1.setText(" |  "+
 			df.format(graph.scanner.getBlockSize())+" FPP, "
 			+df.format(graph.getGraphWidth())
 			+" Pixels"
@@ -443,6 +490,10 @@ public class Main //implements Observer
 		}
 
 		//p("update viewport label");
+
+		rangebox_vpFrames.setStart(graph.scrollOffset*graph.scanner.getBlockSize());
+		rangebox_vpFrames.setEnd((graph.scrollOffset+graph.visibleRect.getWidth())*graph.scanner.getBlockSize());
+		rangebox_vpFrames.setLength(graph.visibleRect.getWidth()*graph.scanner.getBlockSize());
 
 		rangebox_vpPixels.setStart(graph.scrollOffset);
 		rangebox_vpPixels.setEnd(graph.scrollOffset+graph.visibleRect.getWidth());

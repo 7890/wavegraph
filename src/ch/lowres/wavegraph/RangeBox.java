@@ -6,13 +6,15 @@ import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
+import javax.swing.border.*;
 
 import java.text.*;
 
 //=======================================================
 public class RangeBox extends JPanel
 {
-	private JLabel label_start=new JLabel("",JLabel.CENTER);
+	//                                    "X:  000 000 000"
+	private JLabel label_start=new JLabel("               ",JLabel.CENTER);
 	private JLabel label_end=new JLabel("",JLabel.CENTER);
 	private JLabel label_length=new JLabel("",JLabel.CENTER);
 	private JLabel label_caption=new JLabel("",JLabel.CENTER);
@@ -35,13 +37,23 @@ public class RangeBox extends JPanel
 	private void createGUI()
 	{
 		setLayout(new GridLayout(4,1));
-		setPreferredSize(new Dimension(125,70));
+		//setPreferredSize(new Dimension(125,70));
+
 		setOpaque(true);
+
+		Border border=new BevelBorder(BevelBorder.RAISED);
+		setBorder(border);
 
 		label_caption.setOpaque(true);
 		label_caption.setBackground(Colors.labelgroup_background);
 		label_caption.setForeground(Colors.labelgroup_foreground);
 		label_caption.setFont(new JLabel().getFont().deriveFont(10f));
+
+		//top, left, bottom, right
+		label_start.setBorder(new EmptyBorder(1, 4, 1, 4));
+		label_end.setBorder(new EmptyBorder(1, 4, 1, 4));
+		label_length.setBorder(new EmptyBorder(1, 4, 1, 4));
+		label_caption.setBorder(new EmptyBorder(1, 4, 1, 4));
 
 		add(label_start);
 		add(label_end);
@@ -81,19 +93,19 @@ public class RangeBox extends JPanel
 //=======================================================
 	public void setStart(double start)
 	{
-		label_start.setText("S: "+df.format(start));
+		label_start.setText("S:  "+df.format(start));
 	}
 
 //=======================================================
 	public void setEnd(double end)
 	{
-		label_end.setText("E: "+df.format(end));
+		label_end.setText("E:  "+df.format(end));
 	}
 
 //=======================================================
 	public void setLength(double length)
 	{
-		label_length.setText("L: "+df.format(length));
+		label_length.setText("L:  "+df.format(length));
 	}
 
 //=======================================================

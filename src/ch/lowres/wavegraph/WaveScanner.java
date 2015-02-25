@@ -15,6 +15,7 @@ class WaveScanner extends Observable implements Runnable
 	public final static int ABORTED=2;
 	public final static long DATA_AVAILABLE=3;
 	public final static int DONE=4;
+	public final static int EXCEPTION=5;
 
 	private String filename="";
 	private WaveProperties props=new WaveProperties();
@@ -157,6 +158,10 @@ ch2 sample       2         2
 			setChanged();
 			notifyObservers(STARTED);
 			clearChanged();
+		}
+		catch(Exception e)
+		{
+			notifyObservers(EXCEPTION);
 		}
 		finally
 		{

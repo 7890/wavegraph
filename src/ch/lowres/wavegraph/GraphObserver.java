@@ -38,6 +38,7 @@ public class GraphObserver implements Observer
 		else if(status==WaveGraph.SET_EDIT_POINT)
 		{
 			//m.p("edit point changed");
+			m.updateEditPointLabel();
 		}
 		else if(status>=WaveGraph.MOUSE_MOVED 
 			&& status <=WaveGraph.MOUSE_EXITED)
@@ -55,11 +56,12 @@ public class GraphObserver implements Observer
 			else if(status==WaveGraph.MOUSE_ENTERED 
 				|| status==WaveGraph.MOUSE_MOVED)
 			{
-				m.mousePositionInGraph.setText("Pos "+m.df3.format(graph.getMousePoint().x));
+				m.updateMousePointLabel();
+
 			}
 			else if(status==WaveGraph.MOUSE_EXITED)
 			{
-				m.mousePositionInGraph.setText("(Mouse outside)");
+				m.updateMousePointLabel("(Mouse Outside)");
 			}
 		}
 		else if(status==WaveGraph.SCROLLBAR_ADJUSTMENT_CHANGE)
@@ -121,6 +123,13 @@ public class GraphObserver implements Observer
 				updateCounter=0;
 				m.buttonAbort.setEnabled(false);
 				m.p("scan aborted.");
+			}
+			else if(val==WaveScanner.EXCEPTION)
+			{
+				scanFinished=true;
+				updateCounter=0;
+				m.buttonAbort.setEnabled(false);
+				m.p("scan exception.");
 			}
 
 			m.infoPanelTop.repaint();

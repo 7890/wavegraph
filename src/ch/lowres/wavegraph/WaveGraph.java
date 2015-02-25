@@ -227,9 +227,14 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	public void setEditPoint(Point p)
 	{
 		////validity check here
-
-		notifyObservers(SET_EDIT_POINT);
 		editPoint=p;
+		notifyObservers(SET_EDIT_POINT);
+	}
+
+//=======================================================
+	public Point getEditPoint()
+	{
+		return editPoint;
 	}
 
 //=======================================================
