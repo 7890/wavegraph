@@ -10,12 +10,15 @@ import java.nio.channels.*;
 //=======================================================
 class WaveScanner extends Observable implements Runnable
 {
+	public final static int UNKNOWN=-1; 
 	public final static int STARTED=0; 
 	public final static int INITIALIZED=1;
 	public final static int ABORTED=2;
 	public final static long DATA_AVAILABLE=3;
 	public final static int DONE=4;
 	public final static int EXCEPTION=5;
+
+	private int status=UNKNOWN;
 
 	private String filename="";
 	private WaveProperties props=new WaveProperties();
@@ -30,7 +33,7 @@ class WaveScanner extends Observable implements Runnable
 	private long cycles=0;
 
 	private boolean abortRequested=false;
-	private boolean done=true;
+//	private boolean done=true;
 
 	private Thread thread;
 
@@ -77,6 +80,24 @@ class WaveScanner extends Observable implements Runnable
 	}
 
 //=======================================================
+	public void reset()
+	{
+		if(status==STARTED || status==INITIALIZED)
+		{
+			abort();
+			try{Thread.sleep(100);}catch(Exception e){}
+		}
+		filename="";
+		outputWidth=0;
+		blockSize=0;
+		cycles=0;
+		props=new WaveProperties();
+		abortRequested=false;
+//		done=true;
+		status=UNKNOWN;
+	}
+
+//=======================================================
 	public void scanData(long pixelsTotalWidth) throws Exception
 	{
 		scanData(0,props.getFrameCount(),pixelsTotalWidth);
@@ -109,7 +130,7 @@ ch2 sample       2         2
 			return;
 		}
 
-		done=false;
+//		done=false;
 
 		long targetWidth=pixelsTotalWidth;
 
@@ -152,16 +173,20 @@ ch2 sample       2         2
 			abortRequested=false;
 			thread=new Thread(this);
 
-			//p("scanning sample data...");
-			thread.start();
-
+			status=STARTED;
 			setChanged();
 			notifyObservers(STARTED);
 			clearChanged();
+
+			//p("scanning sample data...");
+			thread.start();
 		}
 		catch(Exception e)
 		{
+			status=EXCEPTION;
+			setChanged();
 			notifyObservers(EXCEPTION);
+			clearChanged();
 		}
 		finally
 		{
@@ -208,6 +233,7 @@ ch2 sample       2         2
 		///
 		cycles=(int)mbb.capacity()/props.getBlockAlign();
 
+		status=INITIALIZED;
 		setChanged();
 		notifyObservers(INITIALIZED);
 		clearChanged();
@@ -274,6 +300,7 @@ ch2 sample       2         2
 					//allow abort after one multichannel block
 					if(abortRequested)
 					{
+						status=ABORTED;
 						setChanged();
 						notifyObservers(ABORTED);
 						clearChanged();
@@ -283,6 +310,7 @@ ch2 sample       2         2
 			}//end for channels
 		}//end for cap
 
+		status=DONE;
 		setChanged();
 		notifyObservers(DONE);
 		clearChanged();
