@@ -91,37 +91,9 @@ public class Main //implements Observer
 	public static javax.swing.Timer updateTimer=new javax.swing.Timer(-1,null);
 
 //=======================================================
-	public static void main(String[] args) //throws Exception
-	{
-		createShutDownHook();
-
-		p("~~~");
-		p("welcome to "+progName+"!");
-		p("by Thomas Brand <tom@trellis.ch>");
-		p(progHome);
-
-		p("");
-		p("command line argument (optional): (1) file to load");
-		p("if file is directory, a file chooser dialog will be shown.");
-
-		p("");
-		p("Build Info:");
-		p(BuildInfo.get());
-		p("");
-
-		//any errors should be catched
-		Main m=new Main();
-
-		if(args.length>0)
-		{
-			p("using file or directory given on command line");
-			m.processFile(args[0]);
-		}
-	}
-
-//=======================================================
 	public Main()
 	{
+		createShutDownHook();
 		if(os.isMac())
 		{
 			ctrlOrCmd=InputEvent.META_MASK;
@@ -144,6 +116,7 @@ public class Main //implements Observer
 		createGUI();
 		addListeners();
 		updateTimer.setInitialDelay(40);
+
 		resetAllLabels();
 
 		Fonts.change(mainframe);
@@ -162,6 +135,7 @@ public class Main //implements Observer
 //=======================================================
 	public static String showOpenFileDialog(String baseDir, String file)
 	{
+
 		return AFileChooser.showOpenFileDialog(baseDir, file);
 	}
 
@@ -169,27 +143,39 @@ public class Main //implements Observer
 	public static void resetAllLabels()
 	{
 		mainframe.setTitle(progName);
-		genericInfoLabel.setText("");
-		durationLabel.setText("");
-		scanProgressLabel.setText("(No File Loaded or unknown File Format)");
-		buttonAbort.setVisible(false);
 
-		//force bottom panel to have size as with labels
-		viewPortInfoLabel1.setText("");//Open File via Menu or Drag & Drop in Window");
+		//force labels to become blank
+		props=null;
+
+		updateGenericInfoLabel();
+		updateViewportInfoLabel();
+		updateSelectionLabel();
+		updateViewportLabel();
+		updateEditPointLabel();
+		updateMousePointLabel();
+
+		buttonAbort.setVisible(false);
 	}
 
 //=======================================================
 	public static void processFile(String file)
 	{
-		resetAllLabels();
-		updateTimer.stop();
-		graph.clear();
+//		updateTimer.stop();
 
-		if(file==null || file.equals(""))
+		if(file==null || file.equals(""))//i.e. openfile dialog cancelled
 		{
-			applicationMenu.setNoFileLoaded();
+			//only clear if no current file around
+			if(currentFile==null || currentFile.equals(""))
+			{
+				applicationMenu.setNoFileLoaded();
+				graph.clear();
+				resetAllLabels();
+			}
 			return;
 		}
+
+		graph.clear();
+		resetAllLabels();
 
 		try
 		{
@@ -220,6 +206,11 @@ public class Main //implements Observer
 			{
 				currentFile=null;
 				applicationMenu.setNoFileLoaded();
+
+				boolean show=graph.isDisplayScrollbar();
+				graph.setDisplayScrollbar(false);
+				graph.setDisplayScrollbar(show);
+
 				return;
 			}
 
@@ -227,6 +218,7 @@ public class Main //implements Observer
 			applicationMenu.addRecentFile(new File(currentFile));
 
 			updateGenericInfoLabel();
+			updateViewportInfoLabel();
 			updateSelectionLabel();
 			updateViewportLabel();
 			updateEditPointLabel();
@@ -248,15 +240,6 @@ public class Main //implements Observer
 			//start work
 			graph.scanner.scanData(graphWidth);
 			//scanner.scanData((long)(props.getFrameCount()/2),(long)(props.getFrameCount()/2),graphWidth);
-
-			SwingUtilities.invokeLater(new Runnable()
-			{
-				public void run()
-				{
-					graph.revalidate();
-				}
-			});
-
 		}
 		catch(Exception e)
 		{
@@ -343,6 +326,9 @@ public class Main //implements Observer
 	{
 		if(props==null || !props.isValid())
 		{
+			genericInfoLabel.setText("");
+			durationLabel.setText("");
+			scanProgressLabel.setText("(No File Loaded or unknown File Format)");
 			return;
 		}
 
@@ -377,6 +363,9 @@ public class Main //implements Observer
 	{
 		if(props==null || !props.isValid())
 		{
+			rangebox_selFrames.blank();
+			rangebox_selPixels.blank();
+			rangebox_selHMS.blank();
 			return;
 		}
 
@@ -424,6 +413,7 @@ public class Main //implements Observer
 	{
 		if(props==null || !props.isValid())
 		{
+			rangebox_Mousepoint.blank();
 			return;
 		}
 
@@ -431,11 +421,11 @@ public class Main //implements Observer
 
 		//frames
 		rangebox_Mousepoint.setStart("F:  "+
-			df3.format(m.x*graph.scanner.getBlockSize())
+			df3.format(m.x*graph.scanner.getBlockSize())+" "
 		);
 		//pixels
 		rangebox_Mousepoint.setEnd("P:  "+
-			df3.format(m.x)
+			df3.format(m.x)+" "
 		);
 		//hms
 		rangebox_Mousepoint.setLength("H: "+
@@ -449,6 +439,7 @@ public class Main //implements Observer
 	{
 		if(props==null || !props.isValid())
 		{
+			rangebox_Editpoint.blank();
 			return;
 		}
 
@@ -456,11 +447,11 @@ public class Main //implements Observer
 
 		//frames
 		rangebox_Editpoint.setStart("F:  "+
-			df3.format(ep.x*graph.scanner.getBlockSize())
+			df3.format(ep.x*graph.scanner.getBlockSize())+" "
 		);
 		//pixels
 		rangebox_Editpoint.setEnd("P:  "+
-			df3.format(ep.x)
+			df3.format(ep.x)+" "
 		);
 		//hms
 		rangebox_Editpoint.setLength("H: "+
@@ -472,6 +463,11 @@ public class Main //implements Observer
 //========================================================================
 	public static void updateViewportInfoLabel()
 	{
+		if(props==null || !props.isValid())
+		{
+			viewPortInfoLabel1.setText("");
+			return;
+		}
 
 		viewPortInfoLabel1.setText(" |  "+
 			df.format(graph.scanner.getBlockSize())+" FPP, "
@@ -486,6 +482,9 @@ public class Main //implements Observer
 	{
 		if(props==null || !props.isValid())
 		{
+			rangebox_vpFrames.blank();
+			rangebox_vpPixels.blank();
+			rangebox_vpHMS.blank();
 			return;
 		}
 
@@ -883,6 +882,16 @@ public class Main //implements Observer
 			public void actionPerformed(ActionEvent e)
 			{
 				graph.nudgeSelectionRangeForward();
+			}
+		});
+
+		//'m'
+		KeyStroke keym = KeyStroke.getKeyStroke('m');
+		actionMap.put(keym, new AbstractAction("m") 
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				//test
 			}
 		});
 
