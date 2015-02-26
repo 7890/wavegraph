@@ -16,8 +16,10 @@ public class Mac
 //========================================================================
 	public static void init()
 	{
-		//set name in osx menu (only works if called before any widget created)
 		//System.setProperty("com.apple.mrj.application.apple.menu.about.name",m.progName);
+
+		//put app menu to osx menu bar
+		System.setProperty("apple.laf.useScreenMenuBar","true");
 
 		//AboutHandler, PreferencesHandler, AppReOpenedListener, OpenFilesHandler, PrintFilesHandler, QuitHandler, QuitResponse 
 		com.apple.eawt.Application application = com.apple.eawt.Application.getApplication();
@@ -54,7 +56,8 @@ public class Mac
 		//only works with Aqua Look and Feel
 		//application.setDefaultMenuBar(m.applicationMenu);
 
-		enableFullScreenMode(m.mainframe);
+		//openjdk on osx can't handle (?)
+		//enableFullScreenMode(m.mainframe);
 
 	}//end init
 
