@@ -9,7 +9,6 @@ public class GraphObserver implements Observer
 {
 	private static Main m;
 
-	private boolean scanFinished=false;
 	private int updateCounter=0;
 
 	private WaveGraph graph;
@@ -61,7 +60,7 @@ public class GraphObserver implements Observer
 			}
 			else if(status==WaveGraph.MOUSE_EXITED)
 			{
-				m.updateMousePointLabel("(Mouse Outside)");
+				m.updateMousePointLabel("(Mouse Outside) ");
 			}
 		}
 		else if(status==WaveGraph.SCROLLBAR_ADJUSTMENT_CHANGE)
@@ -103,6 +102,10 @@ public class GraphObserver implements Observer
 				m.buttonAbort.setVisible(true);
 				m.buttonAbort.setEnabled(true);
 				m.p("scan started");
+
+				boolean show=graph.isDisplayScrollbar();
+				graph.setDisplayScrollbar(false);
+				graph.setDisplayScrollbar(show);
 			}
 			else if(val==WaveScanner.INITIALIZED)
 			{
@@ -112,21 +115,19 @@ public class GraphObserver implements Observer
 			else if(val==WaveScanner.DONE)
 			{
 				updateCounter=0;
-				scanFinished=true;
+				graph.setScanDone();
 				m.scanProgressLabel.setText(" |  100% Scanned");
 				m.buttonAbort.setEnabled(false);
 				m.p("scan done.");
 			}
 			else if(val==WaveScanner.ABORTED)
 			{
-				scanFinished=true;
 				updateCounter=0;
 				m.buttonAbort.setEnabled(false);
 				m.p("scan aborted.");
 			}
 			else if(val==WaveScanner.EXCEPTION)
 			{
-				scanFinished=true;
 				updateCounter=0;
 				m.buttonAbort.setEnabled(false);
 				m.p("scan exception.");
