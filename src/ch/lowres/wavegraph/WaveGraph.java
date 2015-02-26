@@ -218,6 +218,12 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	}
 
 //=======================================================
+	public void setScanDone()
+	{
+		scanDone=true;
+	}
+
+//=======================================================
 	public long getGraphWidth()
 	{
 		return scanner.getOutputWidth();
@@ -244,7 +250,6 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 
 		notifyObservers(SET_SELECTION);
 	}
-
 
 //=======================================================
 	public Point[] getSelectionRange()
@@ -338,7 +343,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	public void clear()
 	{
 		//p("graph cleared");
-		scanner.abort();
+		scanner.reset();
 		scanDone=false;
 		clearDue=true;
 		blocks.clear();
@@ -839,12 +844,14 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		//create array of waveblocks to display for viewport
 		if(!scanDone)
 		{
+			//System.out.println('.');
 			//prevent java.util.ConcurrentModificationException
 			//only needed if not finished scanning! increased memory use,
 			copy = new ArrayList<AggregatedWaveBlock>(blocks);
 		}
 		else
 		{
+			//System.out.println(',');
 			copy=blocks;
 		}
 
