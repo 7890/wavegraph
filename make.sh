@@ -60,7 +60,9 @@ function compile_wavegraph()
 	unzip -p "$archive"/AppleJavaExtensions.zip \
 		AppleJavaExtensions/AppleJavaExtensions.jar > "$classes"/AppleJavaExtensions.jar
 
-	javac -source $jsource -target $jtarget -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" "$src"/$package_path/*.java
+	javac -source $jsource -target $jtarget -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" "$src"/$package_path/*.java \
+	&& \
+	javac -source $jsource -target $jtarget -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" "$src"/*.java
 
 	ret=$?
 	if [ $ret -ne 0 ]
@@ -113,7 +115,8 @@ function build_jar
 
 	echo "Manifest-Version: 1.0" > "$build"/Manifest.txt
 	echo "SplashScreen-Image: resources/images/wavegraph_splash_screen.png" >> "$build"/Manifest.txt
-	echo "Main-Class: ch.lowres.wavegraph.Main" >> "$build"/Manifest.txt
+#	echo "Main-Class: ch.lowres.wavegraph.Main" >> "$build"/Manifest.txt
+	echo "Main-Class: Wavegraph" >> "$build"/Manifest.txt
 	echo "" >> "$build"/Manifest.txt
 
 	cd "$classes"
@@ -122,7 +125,11 @@ function build_jar
 
 	echo "creating jar..."
 
-	jar cfvm wavegraph_"$now".jar "$build"/Manifest.txt ch/ resources/
+	jar cfvm wavegraph_"$now".jar \
+		"$build"/Manifest.txt \
+		ch/ \
+		resources/ \
+		Wavegraph.class
 	ls -l wavegraph_"$now".jar
 	echo "move wavegraph_$now.jar to build dir..."
 	mv wavegraph_"$now".jar "$build"
