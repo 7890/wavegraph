@@ -24,7 +24,7 @@ public class Fonts
 	public static String fontName="Dialog";
 
 	//~points
-	public static float fontDefaultSize=12f;
+	public static float fontDefaultSize=11f;
 	//relative to fontDefaultSize
 	public static float fontLargeFactor=1.0f;
 
