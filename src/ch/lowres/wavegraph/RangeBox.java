@@ -13,8 +13,10 @@ import java.text.*;
 //=======================================================
 public class RangeBox extends JPanel
 {
-	//                                    "X:  000 000 000"
-	private JLabel label_start=new JLabel("               ",JLabel.CENTER);
+	//                         "X:  000 000 000"
+	//                         "X: 00:00:00.000^"
+	private String blankString="                ";
+	private JLabel label_start=new JLabel(blankString,JLabel.CENTER);
 	private JLabel label_end=new JLabel("",JLabel.CENTER);
 	private JLabel label_length=new JLabel("",JLabel.CENTER);
 	private JLabel label_caption=new JLabel("",JLabel.CENTER);
@@ -47,7 +49,7 @@ public class RangeBox extends JPanel
 		label_caption.setOpaque(true);
 		label_caption.setBackground(Colors.labelgroup_background);
 		label_caption.setForeground(Colors.labelgroup_foreground);
-		label_caption.setFont(new JLabel().getFont().deriveFont(10f));
+		//label_caption.setFont(new JLabel().getFont().deriveFont(10f);
 
 		//top, left, bottom, right
 		label_start.setBorder(new EmptyBorder(1, 4, 1, 4));
@@ -67,7 +69,7 @@ public class RangeBox extends JPanel
 		label_start.setFont(f);
 		label_end.setFont(f);
 		label_length.setFont(f);
-		label_caption.setFont(f.deriveFont(10f));
+		label_caption.setFont(f.deriveFont(f.getSize2D()-3));
 	}
 
 //=======================================================
@@ -83,6 +85,14 @@ public class RangeBox extends JPanel
 	}
 
 //=======================================================
+	public void blank()
+	{
+		label_start.setText(blankString);
+		label_end.setText(blankString);
+		label_length.setText(blankString);
+	}
+
+//=======================================================
 	public void setValues(double start, double end, double length)
 	{
 		setStart(start);
@@ -93,19 +103,19 @@ public class RangeBox extends JPanel
 //=======================================================
 	public void setStart(double start)
 	{
-		label_start.setText("S:  "+df.format(start));
+		label_start.setText("S:  "+df.format(start)+" ");
 	}
 
 //=======================================================
 	public void setEnd(double end)
 	{
-		label_end.setText("E:  "+df.format(end));
+		label_end.setText("E:  "+df.format(end)+" ");
 	}
 
 //=======================================================
 	public void setLength(double length)
 	{
-		label_length.setText("L:  "+df.format(length));
+		label_length.setText("L:  "+df.format(length)+" ");
 	}
 
 //=======================================================
