@@ -11,8 +11,8 @@ package ch.lowres.wavegraph;
 
 import java.io.*;
 import java.awt.*;
-import java.util.Date;
-import java.util.Hashtable;
+import java.util.*;
+import java.math.*;
 
 import java.text.DecimalFormat;
 
@@ -587,27 +587,51 @@ others not of interest
 	{
 		if(frames<=0 || sampleRate<=0)
 		{
-			return "00:00:00.000";
+			return "00:00:00.000=";
 		}
 		//for uncompressed, temporal linear data
 
 		DecimalFormat df=new DecimalFormat("#00");
 		DecimalFormat dfSec=new DecimalFormat("#00.000");
+		//dfSec.setRoundingMode(RoundingMode.HALF_UP);
+		dfSec.setRoundingMode(RoundingMode.HALF_DOWN);
 
 		long hours=0;
 		long minutes=0;
 		double seconds=0;
 
+		long secondsFloor=0;
+		double secondsFraction=0;
+
+		double modDelta=0;
+		boolean roundDown=false;
+
 		long waveduration=1000*frames/sampleRate;
 
-//		if(datasize_>0)
-		{//compute duration of PCM wave file
-//			long waveduration=1000*datasize_/avgbps_;//datasize/nAvgBytesPerSec;//in msec units
-			hours=waveduration/3600000L;
-			minutes=(waveduration/60000) % 60;
-			seconds=0.001*(waveduration % 60000);       //double secs.
+		hours=waveduration/3600000L;
+		minutes=(waveduration/60000) % 60;
+		//seconds=0.001*(waveduration % 60000);//double secs.
+
+		//check if will be rounded up or down (or ~ equal)
+		secondsFloor=(long)Math.floor((double)frames/sampleRate);
+		secondsFraction=((double)frames/sampleRate)-secondsFloor;
+
+		modDelta=secondsFraction % 0.001;
+		roundDown=(modDelta>0.0005 ? false : true);
+
+		seconds=secondsFraction+(secondsFloor % 60);
+
+		//if delta is small, indicate with "="
+		if(modDelta<0.0000001 || modDelta > 0.0009999)
+		{
+			return df.format(hours)+":"+df.format(minutes)+":"+dfSec.format(seconds)+"=";
 		}
-		return df.format(hours)+":"+df.format(minutes)+":"+dfSec.format(seconds);
+		else
+		{
+			//"^": value was rounded up
+			//"_": value was rounded down
+			return df.format(hours)+":"+df.format(minutes)+":"+dfSec.format(seconds)+(roundDown ? "_" : "^");
+		}
 	}
 
 //=======================================================
@@ -623,7 +647,7 @@ others not of interest
 
 		p("bytes per sec: "		+getAverageBytesPerSecond());
 
-		p("frame size (block align): "  +getBlockAlign()+" bytes");
+		p("frame size (block align): " 	+getBlockAlign()+" bytes");
 		p("bits per sample: "		+getBitsPerSample());
 		//p("== data chunk ==");
 		p("total sample data size: "	+getDataSize()+" bytes");
@@ -650,7 +674,7 @@ others not of interest
 			int v = bytes[j] & 0xFF;
 			hexChars[j * 2] = hexArray[v >>> 4];
 			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-   		}
+		}
 		return new String(hexChars);
 	}
 
