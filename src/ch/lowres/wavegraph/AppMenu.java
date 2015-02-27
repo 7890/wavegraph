@@ -115,6 +115,13 @@ public class AppMenu extends JMenuBar
 	private static JMenuItem mi_show_scrollbar=new JMenuItem("Show");
 	private static JMenuItem mi_hide_scrollbar=new JMenuItem("Hide");
 
+	private static JMenu sub_view_font=new JMenu("Font");
+	private static JMenu sub_view_font_size=new JMenu("Size");
+
+	private static JMenuItem mi_font_larger=new JMenuItem("Larger");
+	private static JMenuItem mi_font_smaller=new JMenuItem("Smaller");
+	private static JMenuItem mi_font_default=new JMenuItem("Default");
+
 	private static JMenu menu_help=new JMenu("Help");
 	private static JMenuItem mi_about=new JMenuItem("About...");
 
@@ -262,6 +269,22 @@ public class AppMenu extends JMenuBar
 		mi_show_scrollbar.setEnabled(false);
 
 		menu_view.add(sub_view_canvas);
+
+		mi_font_larger.setAccelerator(
+			KeyStroke.getKeyStroke('+'));
+
+		mi_font_smaller.setAccelerator(
+			KeyStroke.getKeyStroke('-'));
+
+		mi_font_default.setAccelerator(
+			KeyStroke.getKeyStroke('='));
+
+		sub_view_font_size.add(mi_font_larger);
+		sub_view_font_size.add(mi_font_smaller);
+		sub_view_font_size.add(mi_font_default);
+
+		sub_view_font.add(sub_view_font_size);
+		menu_view.add(sub_view_font);
 
 		menu_view.setMnemonic('V');
 		add(menu_view);
@@ -804,6 +827,30 @@ public class AppMenu extends JMenuBar
 				m.graph.setDisplayScrollbar(false);
 				mi_hide_scrollbar.setEnabled(false);
 				mi_show_scrollbar.setEnabled(true);
+			}
+		});
+
+		mi_font_default.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				Fonts.setDefaultSize();
+			}
+		});
+
+		mi_font_smaller.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				Fonts.decreaseSize();
+			}
+		});
+
+		mi_font_larger.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				Fonts.increaseSize();
 			}
 		});
 

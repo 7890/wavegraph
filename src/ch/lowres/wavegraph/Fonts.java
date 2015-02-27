@@ -87,6 +87,41 @@ public class Fonts
 	}
 
 //========================================================================
+	public static void setDefaultSize()
+	{
+		fontDefaultSize=11f;
+		fontNormalSize=dpiCorrectedPt(fontDefaultSize);
+		fontNormal=fontNormal.deriveFont(fontNormalSize);
+		change(m.mainframe);
+		change(m.about);
+		m.mainframe.revalidate();
+		m.graph.forceRepaint();
+	}
+
+//========================================================================
+	public static void increaseSize()
+	{
+		fontNormalSize+=2f;
+		fontNormal=fontNormal.deriveFont(fontNormalSize);
+		change(m.mainframe);
+		change(m.about);
+		m.mainframe.revalidate();
+		m.graph.forceRepaint();
+	}
+
+//========================================================================
+	public static void decreaseSize()
+	{
+		fontNormalSize-=2f;
+		fontNormalSize=Math.max(6,fontNormalSize);
+		fontNormal=fontNormal.deriveFont(fontNormalSize);
+		change(m.mainframe);
+		change(m.about);
+		m.mainframe.revalidate();
+		m.graph.forceRepaint();
+	}
+
+//========================================================================
 	//http://stackoverflow.com/questions/12730230/set-the-same-font-for-all-component-java
 	//http://stackoverflow.com/questions/22494495/change-font-dynamically-causes-problems-on-some-components
 	public static void change(Component component)
