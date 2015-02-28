@@ -27,17 +27,14 @@ class WaveScanner extends Observable implements Runnable
 	private FileChannel fc;
 	private MappedByteBuffer mbb;
 
-	private long outputWidth=0;
-	private long blockSize=0;
-
-	private long cycles=0;
+	private long outputWidth=0; //pixels
+	private long blockSize=0; //frames per block (one block per channel)
+	private long cycles=0; //cycles needed to aggregate blocks (for all channels)
 
 	private boolean abortRequested=false;
-//	private boolean done=true;
 
-	private Thread thread;
-
-	private WaveGraph graph;
+	private Thread thread; //to start scanner in thread
+	private WaveGraph graph; //add aggregated wave blocks to this graph
 
 //=======================================================
 	public WaveScanner(WaveGraph graph)
@@ -93,7 +90,6 @@ class WaveScanner extends Observable implements Runnable
 		cycles=0;
 		props=new WaveProperties();
 		abortRequested=false;
-//		done=true;
 		status=UNKNOWN;
 	}
 
@@ -129,8 +125,6 @@ ch2 sample       2         2
 			p("file "+filename+ " was not valid.");
 			return;
 		}
-
-//		done=false;
 
 		long targetWidth=pixelsTotalWidth;
 
