@@ -137,18 +137,46 @@ public class AppMenu extends JMenuBar
 	}
 
 //=======================================================
+	private MenuListener listener = new MenuListener()
+	{
+		public void menuCanceled(MenuEvent e)
+		{
+		}
+
+		public void menuSelected(MenuEvent e)
+		{
+			//temporary remove keylistener to not interfere with menu keys
+			m.removeGlobalKeyListeners();
+		}
+		public void menuDeselected(MenuEvent e)
+		{
+			//add keylistener again
+			m.addGlobalKeyListeners();
+		}
+	};
+
+//=======================================================
 	private void createMenu()
 	{
 		mi_open_file.setAccelerator(
 			KeyStroke.getKeyStroke(KeyEvent.VK_O, m.ctrlOrCmd));
 
-/*
-		mi_save_image.setAccelerator(
-			KeyStroke.getKeyStroke(KeyEvent.VK_S, m.ctrlOrCmd));
-*/
-
 		mi_quit.setAccelerator(
 			KeyStroke.getKeyStroke(KeyEvent.VK_Q, m.ctrlOrCmd));
+
+		mi_font_larger.setAccelerator(
+			KeyStroke.getKeyStroke('+'));
+
+		mi_font_smaller.setAccelerator(
+			KeyStroke.getKeyStroke('-'));
+
+		mi_font_default.setAccelerator(
+			KeyStroke.getKeyStroke('='));
+
+		menu_file.addMenuListener(listener);
+		sub_edit_selection.addMenuListener(listener);
+		menu_view.addMenuListener(listener);
+		menu_help.addMenuListener(listener);
 
 		menu_file.add(mi_open_file);
 		menu_file.add(mi_open_file_clipboard);
@@ -269,15 +297,6 @@ public class AppMenu extends JMenuBar
 		mi_show_scrollbar.setEnabled(false);
 
 		menu_view.add(sub_view_canvas);
-
-		mi_font_larger.setAccelerator(
-			KeyStroke.getKeyStroke('+'));
-
-		mi_font_smaller.setAccelerator(
-			KeyStroke.getKeyStroke('-'));
-
-		mi_font_default.setAccelerator(
-			KeyStroke.getKeyStroke('='));
 
 		sub_view_font_size.add(mi_font_larger);
 		sub_view_font_size.add(mi_font_smaller);
