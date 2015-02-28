@@ -19,9 +19,6 @@ import java.text.*;
 import java.awt.datatransfer.*;
 import java.awt.Toolkit;
 
-//import java.lang.reflect.*;
-//import javax.swing.plaf.basic.BasicScrollBarUI;
-
 //=======================================================
 public class Main //implements Observer
 {
@@ -51,7 +48,6 @@ public class Main //implements Observer
 	//south
 	public static JPanel infoPanelBottom=new JPanel(new WrapLayout(WrapLayout.RIGHT));
 
-//	public static JPanel infoPanelBottomGroup0=new JPanel(new GridLayout(3,1));
 	public static JLabel viewPortInfoLabel1=new JLabel("");
 
 	public static RangeBox rangebox_Mousepoint=new RangeBox("Mouse");
@@ -86,7 +82,8 @@ public class Main //implements Observer
 
 	public static DecimalFormat df = new DecimalFormat("#,###,###,##0");
 	public static DecimalFormat df2 = new DecimalFormat("#,###,###,##0.00");
-	public static DecimalFormat df3 = new DecimalFormat("#,000,000,000");
+//	public static DecimalFormat df3 = new DecimalFormat("#,000,000,000");
+	public static DecimalFormat df3 = new DecimalFormat("#,###,###,##0");
 
 	public static javax.swing.Timer updateTimer=new javax.swing.Timer(-1,null);
 
@@ -264,9 +261,6 @@ public class Main //implements Observer
 		infoPanelBottom.setOpaque(true);
 		infoPanelBottom.setBackground(Colors.infopanel_background);
 
-		//infoPanelBottomGroup0.setOpaque(false);
-		//infoPanelBottomGroup0.setPreferredSize(new Dimension(200,70));
-
 		//north
 		infoPanelTop.add(genericInfoLabel);
 		infoPanelTop.add(durationLabel);
@@ -420,12 +414,12 @@ public class Main //implements Observer
 		Point m=graph.getMousePoint();
 
 		//frames
-		rangebox_Mousepoint.setStart("F:  "+
-			df3.format(m.x*graph.scanner.getBlockSize())+" "
+		rangebox_Mousepoint.setStart("F:  "+padLeft(
+			df3.format(m.x*graph.scanner.getBlockSize()),11)+" "
 		);
 		//pixels
-		rangebox_Mousepoint.setEnd("P:  "+
-			df3.format(m.x)+" "
+		rangebox_Mousepoint.setEnd("P:  "+padLeft(
+			df3.format(m.x),11)+" "
 		);
 		//hms
 		rangebox_Mousepoint.setLength("H: "+
@@ -446,12 +440,12 @@ public class Main //implements Observer
 		Point ep=graph.getEditPoint();
 
 		//frames
-		rangebox_Editpoint.setStart("F:  "+
-			df3.format(ep.x*graph.scanner.getBlockSize())+" "
+		rangebox_Editpoint.setStart("F:  "+padLeft(
+			df3.format(ep.x*graph.scanner.getBlockSize()),11)+" "
 		);
 		//pixels
-		rangebox_Editpoint.setEnd("P:  "+
-			df3.format(ep.x)+" "
+		rangebox_Editpoint.setEnd("P:  "+padLeft(
+			df3.format(ep.x),11)+" "
 		);
 		//hms
 		rangebox_Editpoint.setLength("H: "+
@@ -585,6 +579,7 @@ public class Main //implements Observer
 		});//end addActionListener to updateTimer
 
 		addDnDSupport();
+		createGlobalKeyActions();
 		addGlobalKeyListeners();
 	}
 
@@ -714,15 +709,27 @@ public class Main //implements Observer
 	}// end getStringFromClipboard
 
 //========================================================================
-	private static void addGlobalKeyListeners()
+	private static void createGlobalKeyActions()
 	{
-		JRootPane rootPane = mainframe.getRootPane();
 
-		//to enable key repeat events in osx (lion, ..?) /!\:
-		//defaults write -g ApplePressAndHoldEnabled -bool false
+/*
+However you will still have problems because the default InputMap only receives the key events 
+when it has focus and by default a JPanel is not focusable. So you have two options:
 
-		InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+a) make the panel focusable:
 
+panel.setFocusable( true );
+
+b) use a different InputMap:
+
+inputMap = panel.getInputMap(JPanel.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+*/
+
+//InputMap inputMap = graph.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+//ActionMap actionMap = graph.getActionMap();
+
+/*
+		//handled by scrollbar, allowing to use arrow left in menu
 		//scroll left
 		KeyStroke keyLeft = KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,0);
 		actionMap.put(keyLeft, new AbstractAction("LEFT") 
@@ -732,6 +739,7 @@ public class Main //implements Observer
 				graph.scrollBackward(1);
 			}
 		});
+*/
 
 		//scroll left fast
 		KeyStroke keyCtrlLeft = KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,ctrlOrCmd);
@@ -763,7 +771,8 @@ public class Main //implements Observer
 				graph.scrollBackward(64);
 			}
 		});
-
+/*
+		//handled by scrollbar, allowing to use arrow right in menu
 		//scroll right
 		KeyStroke keyRight = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,0);
 		actionMap.put(keyRight, new AbstractAction("RIGHT") 
@@ -774,6 +783,7 @@ public class Main //implements Observer
 			}
 		});
 
+*/
 		//scroll right fast
 		KeyStroke keyCtrlRight = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,ctrlOrCmd);
 		actionMap.put(keyCtrlRight, new AbstractAction("CTRL_RIGHT") 
@@ -929,13 +939,24 @@ public class Main //implements Observer
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				showMenu(true);
+				if(about.isVisible())
+				{
+					about.setVisible(false);
+					mainframe.toFront();
+				}
+				else
+				{
+					showMenu(true);
+				}
 			}
 		});
+	}//end createGlobalKeyActions
 
-		//http://stackoverflow.com/questions/100123/application-wide-keyboard-shortcut-java-swing
-		KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-		kfm.addKeyEventDispatcher( new KeyEventDispatcher() 
+//========================================================================
+	final static KeyboardFocusManager kfm=KeyboardFocusManager.getCurrentKeyboardFocusManager();
+
+	//http://stackoverflow.com/questions/100123/application-wide-keyboard-shortcut-java-swing
+	final static KeyEventDispatcher ked=new KeyEventDispatcher() 
 		{
 			public boolean dispatchKeyEvent(KeyEvent e)
 			{
@@ -955,7 +976,19 @@ public class Main //implements Observer
 				}
 				return false;
 			}
-		});
+		};
+
+//========================================================================
+	public static void removeGlobalKeyListeners()
+	{
+		kfm.removeKeyEventDispatcher(ked);
+	}
+
+//========================================================================
+	public static void addGlobalKeyListeners()
+	{
+		kfm.addKeyEventDispatcher(ked);
+
 	}//end addGlobalKeyListeners
 
 //========================================================================
@@ -1065,6 +1098,19 @@ public class Main //implements Observer
 			}
 		}));
 	}//end createShutDownHook
+
+//=======================================================
+	//http://stackoverflow.com/questions/388461/how-can-i-pad-a-string-in-java
+	public static String padRight(String s, int n)
+	{
+		return String.format("%1$-" + n + "s", s);
+	}
+
+//=======================================================
+	public static String padLeft(String s, int n)
+	{
+		return String.format("%1$" + n + "s", s);
+	}
 
 //=======================================================
 	public static void p(String s)
