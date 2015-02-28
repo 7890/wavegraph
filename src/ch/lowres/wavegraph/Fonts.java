@@ -94,6 +94,7 @@ public class Fonts
 		fontNormal=fontNormal.deriveFont(fontNormalSize);
 		change(m.mainframe);
 		change(m.about);
+		m.about.updateText();
 		m.mainframe.revalidate();
 		m.graph.forceRepaint();
 	}
@@ -105,6 +106,7 @@ public class Fonts
 		fontNormal=fontNormal.deriveFont(fontNormalSize);
 		change(m.mainframe);
 		change(m.about);
+		m.about.updateText();
 		m.mainframe.revalidate();
 		m.graph.forceRepaint();
 	}
@@ -117,6 +119,7 @@ public class Fonts
 		fontNormal=fontNormal.deriveFont(fontNormalSize);
 		change(m.mainframe);
 		change(m.about);
+		m.about.updateText();
 		m.mainframe.revalidate();
 		m.graph.forceRepaint();
 	}
