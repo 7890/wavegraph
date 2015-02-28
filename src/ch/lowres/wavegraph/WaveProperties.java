@@ -582,12 +582,12 @@ others not of interest
 	}
 
 //=======================================================
-//	public static St<ring getDurationString(long datasize_, int avgbps_)
 	public static String getDurationString(long frames, int sampleRate )
 	{
 		if(frames<=0 || sampleRate<=0)
 		{
-			return "00:00:00.000=";
+//			return "00:00:00.000=";
+			return "      00.000=";
 		}
 		//for uncompressed, temporal linear data
 
@@ -621,16 +621,38 @@ others not of interest
 
 		seconds=secondsFraction+(secondsFloor % 60);
 
+		String returnString="";
+		if(hours>0)
+		{
+			returnString+=df.format(hours)+":";
+		}
+		else
+		{
+			returnString+="   ";
+		}
+		if(minutes>0)
+		{
+			returnString+=df.format(minutes)+":";
+		}
+		else if(hours>0) //&& minutes 0
+		{
+			returnString+="00:";
+		}
+		else
+		{
+			returnString+="   ";
+		}
+
 		//if delta is small, indicate with "="
 		if(modDelta<0.0000001 || modDelta > 0.0009999)
 		{
-			return df.format(hours)+":"+df.format(minutes)+":"+dfSec.format(seconds)+"=";
+			return returnString+=dfSec.format(seconds)+"=";
 		}
 		else
 		{
 			//"^": value was rounded up
 			//"_": value was rounded down
-			return df.format(hours)+":"+df.format(minutes)+":"+dfSec.format(seconds)+(roundDown ? "_" : "^");
+			return returnString+=dfSec.format(seconds)+(roundDown ? "_" : "^");
 		}
 	}
 
