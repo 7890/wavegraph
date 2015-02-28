@@ -103,19 +103,19 @@ public class RangeBox extends JPanel
 //=======================================================
 	public void setStart(double start)
 	{
-		label_start.setText("S:  "+df.format(start)+" ");
+		label_start.setText("S:  "+padLeft(df.format(start),11)+" ");
 	}
 
 //=======================================================
 	public void setEnd(double end)
 	{
-		label_end.setText("E:  "+df.format(end)+" ");
+		label_end.setText("E:  "+padLeft(df.format(end),11)+" ");
 	}
 
 //=======================================================
 	public void setLength(double length)
 	{
-		label_length.setText("L:  "+df.format(length)+" ");
+		label_length.setText("L:  "+padLeft(df.format(length),11)+" ");
 	}
 
 //=======================================================
@@ -135,5 +135,17 @@ public class RangeBox extends JPanel
 	{
 		label_length.setText(length);
 	}
+
 //=======================================================
+	//http://stackoverflow.com/questions/388461/how-can-i-pad-a-string-in-java
+	public static String padRight(String s, int n)
+	{
+		return String.format("%1$-" + n + "s", s);
+	}
+
+//=======================================================
+	public static String padLeft(String s, int n)
+	{
+		return String.format("%1$" + n + "s", s);
+	}
 }//end class RangeBox
