@@ -174,7 +174,6 @@ public abstract class ADialog extends JDialog
 		JRootPane rootPane = new JRootPane();
 
 		KeyStroke keySpace = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,0,false);
-		KeyStroke keyEscape = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0,false);
 		KeyStroke keyCtrlD = KeyStroke.getKeyStroke(KeyEvent.VK_D,g.ctrlOrCmd,false);
 
 		Action actionListenerClose = new AbstractAction()
@@ -190,9 +189,6 @@ public abstract class ADialog extends JDialog
 
 		inputMap.put(keySpace, "SPACE");
 		rootPane.getActionMap().put("SPACE", actionListenerClose);
-
-		inputMap.put(keyEscape, "ESCAPE");
-		rootPane.getActionMap().put("ESCAPE", actionListenerClose);
 
 		inputMap.put(keyCtrlD, "CTRL_D");
 		rootPane.getActionMap().put("CTRL_D", actionListenerClose);
