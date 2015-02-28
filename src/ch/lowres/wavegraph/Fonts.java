@@ -95,8 +95,13 @@ public class Fonts
 		change(m.mainframe);
 		change(m.about);
 		m.about.updateText();
-		m.mainframe.revalidate();
-		m.graph.forceRepaint();
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				m.graph.forceRepaint();
+			}
+		});
 	}
 
 //========================================================================
@@ -107,8 +112,13 @@ public class Fonts
 		change(m.mainframe);
 		change(m.about);
 		m.about.updateText();
-		m.mainframe.revalidate();
-		m.graph.forceRepaint();
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				m.graph.forceRepaint();
+			}
+		});
 	}
 
 //========================================================================
@@ -120,8 +130,13 @@ public class Fonts
 		change(m.mainframe);
 		change(m.about);
 		m.about.updateText();
-		m.mainframe.revalidate();
-		m.graph.forceRepaint();
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				m.graph.forceRepaint();
+			}
+		});
 	}
 
 //========================================================================
