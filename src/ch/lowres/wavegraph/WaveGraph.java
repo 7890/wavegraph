@@ -812,14 +812,14 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		if(firstCounterWhileLoading==0)
 		{
 			firstCounterWhileLoading=updateCounter;
-			panel.repaint();
+			forceRepaint();
 			return;
 		}
 
 		if(!waitWithRepaintWhileLoading && updateCounter>visibleRect.getWidth())
 		{
 			//p("updateCounter "+updateCounter+" "+visibleRect.getWidth());
-			panel.repaint();
+			forceRepaint();
 			waitWithRepaintWhileLoading=true;
 		}
 	}
