@@ -34,22 +34,22 @@ class ToFloat
 	}
 
 //=======================================================
-	public static float signed16(byte[] sample)
+	public static float signed16(byte[] sample, boolean isBigEndian)
 	{
-		return (float) bytesToInt16(sample,0,false) / m16_div;
+		return (float) bytesToInt16(sample,0,isBigEndian) / m16_div;
 	}
 
 //=======================================================
-	public static float signed24(byte[] sample)
+	public static float signed24(byte[] sample, boolean isBigEndian)
 	{
-		return (float) bytesToInt24(sample,0,false) / m24_div;
+		return (float) bytesToInt24(sample,0,isBigEndian) / m24_div;
 	}
 
 //=======================================================
-	public static float signed32(byte[] sample)
+	public static float signed32(byte[] sample, boolean isBigEndian)
 	{
 		//2^32 =4294967296
-		return (float) bytesToInt32(sample,0,false) / m32_div;
+		return (float) bytesToInt32(sample,0,isBigEndian) / m32_div;
 	}
 
 //http://coweb.cc.gatech.edu/mediaComp-plan/uploads/55/JavaSound.java

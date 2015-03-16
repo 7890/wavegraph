@@ -36,6 +36,9 @@ class WaveScanner extends Observable implements Runnable
 	private Thread thread; //to start scanner in thread
 	private WaveGraph graph; //add aggregated wave blocks to this graph
 
+	//test, default
+	private boolean isBigEndian=false;
+
 //=======================================================
 	public WaveScanner(WaveGraph graph)
 	{
@@ -158,9 +161,15 @@ ch2 sample       2         2
 					+fromPos*props.getBlockAlign(),
 				frames*props.getBlockAlign());
 
-
-			//assume RIFF data is little endian
-			mbb.order(ByteOrder.LITTLE_ENDIAN);
+			if(!isBigEndian)
+			{
+				//assume RIFF data is little endian
+				mbb.order(ByteOrder.LITTLE_ENDIAN);
+			}
+			else
+			{
+				mbb.order(ByteOrder.LITTLE_ENDIAN);
+			}
 
 			//p("mapped byte buffer info: "+mbb.toString());
 
@@ -337,17 +346,19 @@ ch2 sample       2         2
 				return ToFloat.unsignedByte(buf.get());
 			}
 		}
+		//omitting 12 bit
+
 		//2 bytes per sample and channel
 		else if(props.getBitsPerSample()==16)
 		{
 			buf.get(b2);
-			return ToFloat.signed16(b2);
+			return ToFloat.signed16(b2,isBigEndian);
 		}
 		//3 bytes per sample and channel
 		else if(props.getBitsPerSample()==24)
 		{
 			buf.get(b3);
-			return ToFloat.signed24(b3);
+			return ToFloat.signed24(b3,isBigEndian);
 		}
 		//4 bytes per sample and channel
 		else if(props.getBitsPerSample()==32)
@@ -357,7 +368,7 @@ ch2 sample       2         2
 				|| props.getSubFormat()==props.WAVE_FORMAT_LINEAR_PCM)
 			{
 				buf.get(b4);
-				return ToFloat.signed32(b4);
+				return ToFloat.signed32(b4,isBigEndian);
 			}
 			else //assume float
 			//props.WAVE_FORMAT_IEEE_FLOAT, props.getSubFormat()==props.WAVE_FORMAT_IEEE_FLOAT
