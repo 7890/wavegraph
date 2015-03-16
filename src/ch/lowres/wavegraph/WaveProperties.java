@@ -10,7 +10,6 @@ Copyright JavaScience Consulting 01/03/2003, 10/26/2006 , 11/15/2006, 03/31/2007
 package ch.lowres.wavegraph;
 
 import java.io.*;
-import java.awt.*;
 import java.util.*;
 import java.math.*;
 
