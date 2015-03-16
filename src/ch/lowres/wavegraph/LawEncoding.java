@@ -2,10 +2,33 @@
 
 package ch.lowres.wavegraph;
 
+/*
+http://web.archive.org/web/20090107141325/http://www.nuvoton-usa.com/en/content/view/283/520/
+http://www.digitalpreservation.gov/formats/fdd/fdd000038.shtml
+
+"µ-law and A-law are audio compression schemes defined by ITU-T G.711 that compress 
+16 bit linear data down to 8 bits of logarithmic data. The encoding process 
+(referred to logarithmic companding) breaks the linear data into segments with 
+each progressively higher segment doubling in size. This ensures that the lower 
+amplitude signals (where most of the information in speech takes place) get 
+the highest bit resolution while still allowing enough dynamic range to encode 
+high amplitude signals. Though this method does not provide a very high compression 
+ratio (roughly 2:1), it does not require much processing power to decode.
+
+"Mu-law (also written µ-Law) is the encoding scheme used in North America and Japan 
+for voice traffic. A-Law (or a-Law) is used in Europe and throughout the rest of 
+the world. The two schemes are very similar. Both break the total dynamic range 
+into eight positive and eight negative segments. Bit 1 (MSB) identifies the polarity, 
+bits 2,3,4 identify the segment, and the last four bits quantize the value within 
+the segment. The differences are in the actual coding levels and the bit inversion. 
+Nevertheless, both systems offer 2:1 bit compression, thus doubling the capacity 
+of a digital transmission circuit while maintaining 'toll quality' voice reproduction."
+*/
+
 //=======================================================
 class LawEncoding
 {
-	/* u-law to linear conversion table */ 
+	/* ITU G.711 u-law to linear conversion table */ 
 	private static short [] u2l =
 	{
 		-32124, -31100, -30076, -29052, -28028, -27004, -25980, -24956,
@@ -72,6 +95,8 @@ class LawEncoding
      */ 
     
     /*
+     * ITU G.711 a-law
+     *
      * conversion table alaw to linear
      */
 
