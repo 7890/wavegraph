@@ -31,7 +31,7 @@ public class OpenFileFilter
 //=======================================================
 	public void addExtension(String extension)
 	{
-		//extention including . -> i.e. ".wav"(implicit end)
+		//extension including '.' -> i.e. ".wav"
 		extensions.add(extension);
 	}
 
@@ -43,7 +43,7 @@ public class OpenFileFilter
 			return true;
 		}
 
-		//case insensitive
+		//case *insensitive*
 		for(String ext : extensions)
 		{
 			if(name.toLowerCase().endsWith(ext))
