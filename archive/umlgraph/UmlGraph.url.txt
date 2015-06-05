@@ -1,0 +1,3 @@
+http://www.umlgraph.org/index.html
+https://github.com/dspinellis/UMLGraph
+UmlGraph.jar is only needed for the ant task "javadoc"
