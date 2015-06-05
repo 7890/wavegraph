@@ -2,6 +2,9 @@
 
 package ch.lowres.wavegraph;
 
+//big and little endian
+//http://www.cs.umd.edu/class/sum2003/cmsc311/Notes/Data/endian.html
+
 //=======================================================
 class ToFloat
 {
@@ -66,9 +69,9 @@ class ToFloat
      * <p> This is a reference function.
      */ 
     public static int bytesToInt16( byte [] buffer, int byteOffset, 
-                                    boolean bigEndian) 
+                                    boolean isBigEndian) 
     { 
-        return bigEndian?
+        return isBigEndian?
             ((buffer[byteOffset]<<8) | (buffer[byteOffset+1] & 0xFF)):
            
             ((buffer[byteOffset+1]<<8) | (buffer[byteOffset] & 0xFF));
@@ -83,9 +86,9 @@ class ToFloat
      * <p> This is a reference function.
      */ 
     public static int bytesToInt24( byte [] buffer, int byteOffset, 
-                                    boolean bigEndian) 
+                                    boolean isBigEndian) 
     { 
-        return bigEndian?
+        return isBigEndian?
             ((buffer[byteOffset]<<16) // let Java handle sign-bit 
              | ((buffer[byteOffset+1] & 0xFF)<<8) // inhibit sign-bit handling 
              | (buffer[byteOffset+2] & 0xFF)):
@@ -104,9 +107,9 @@ class ToFloat
      * <p> This is a reference function.
      */ 
     public static int bytesToInt32( byte [] buffer, int byteOffset, 
-                                    boolean bigEndian) 
+                                    boolean isBigEndian) 
     { 
-        return bigEndian?
+        return isBigEndian?
             ((buffer[byteOffset]<<24) // let Java handle sign-bit 
              | ((buffer[byteOffset+1] & 0xFF)<<16) // inhibit sign-bit handling 
              | ((buffer[byteOffset+2] & 0xFF)<<8) // inhibit sign-bit handling 
