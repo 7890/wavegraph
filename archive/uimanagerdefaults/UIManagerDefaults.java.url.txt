@@ -1,0 +1,5 @@
+https://tips4java.wordpress.com/2008/10/09/uimanager-defaults/
+Posted by Rob Camick on October 9, 2008
+
+http://www.camick.com/java/source/UIManagerDefaults.java
+
