@@ -1,0 +1,7 @@
+https://code.google.com/p/swing-explorer/
+Mon Jan  5 06:01:42 CET 2015
+
+svn checkout http://swing-explorer.googlecode.com/svn/trunk/ swing-explorer-read-only
+
+recompiled, unsigned, 1.6
+
