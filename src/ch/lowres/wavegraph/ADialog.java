@@ -99,7 +99,10 @@ public abstract class ADialog extends JDialog
 	public void closeDialog()
 	{
 		setVisible(false);
-		g.mainframe.toFront();
+		if(g.mainframe!=null)
+		{
+			g.mainframe.toFront();
+		}
 	}
 
 //========================================================================
