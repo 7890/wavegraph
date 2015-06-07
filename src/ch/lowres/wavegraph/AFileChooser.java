@@ -28,10 +28,15 @@ public class AFileChooser
 			baseDir=lastFileOpenDirectory;
 		}
 
-		//filter shown files
+		//filter shown files, case insensitive
 		OpenFileFilter filter=new OpenFileFilter();
 		filter.addExtension(".wav");
 		filter.addExtension(".wavex");
+		filter.addExtension(".aif");
+		filter.addExtension(".aiff");
+		filter.addExtension(".aifc");
+		filter.addExtension(".alaw");
+		filter.addExtension(".ulaw");
 
 		if(m.os.isMac())
 		{
