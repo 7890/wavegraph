@@ -20,8 +20,9 @@ class WaveScanner extends Observable implements Runnable
 
 	private int status=UNKNOWN;
 
-	private String filename="";
-	private WaveProperties props=new WaveProperties();
+	private String fileName="";
+
+	private AudioFormat props=new AudioFormat();
 
 	private FileInputStream fis;
 	private FileChannel fc;
@@ -48,11 +49,12 @@ class WaveScanner extends Observable implements Runnable
 //=======================================================
 	private void readHeader()
 	{
-		props.read(filename);
+		AudioFileParser afp=AudioFormat.createParser(fileName);
+		props=afp.parse(fileName);
 
 		if(!props.isValid())
 		{
-			p("file "+filename+" can not be parsed.");
+			p("file "+fileName+" can not be parsed.");
 			return;
 		}
 
@@ -60,16 +62,22 @@ class WaveScanner extends Observable implements Runnable
 	}
 
 //=======================================================
-	public WaveProperties getProps(String file)
+	public AudioFormat getProps(String file)
 	{
-		filename=file;
+		fileName=file;
 		readHeader();
 		return props;
 	}
 
 //=======================================================
-	public WaveProperties getProps()
+	public AudioFormat getProps()
 	{
+		if(props==null)
+		{
+			///
+			p("WaveScanner: props was null");
+			props= new AudioFormat();
+		}
 		return props;
 	}
 
@@ -87,11 +95,11 @@ class WaveScanner extends Observable implements Runnable
 			abort();
 			try{Thread.sleep(100);}catch(Exception e){}
 		}
-		filename="";
+		fileName="";
 		outputWidth=0;
 		blockSize=0;
 		cycles=0;
-		props=new WaveProperties();
+		props=new AudioFormat();
 		abortRequested=false;
 		status=UNKNOWN;
 	}
@@ -105,7 +113,7 @@ class WaveScanner extends Observable implements Runnable
 //=======================================================
 /*
 	fromPos: framePosition, relative to start of sample data (absolute pos 0 of data chunk)
-	frames: number of frames starting at framePos        != byte position
+	frames: number of frames starting at framePos!= byte position
 		one frame: a collection of datapoints ("samples") including all channels for a given position
 	pixelsTotalWidth: desired with of graph (consisting of a series of vertical 1 pixel-wide lines representing data)
 */
@@ -125,7 +133,7 @@ ch2 sample       2         2
 */
 		if(!props.isValid())
 		{
-			p("file "+filename+ " was not valid.");
+			p("file "+fileName+ " was not valid.");
 			return;
 		}
 
@@ -150,7 +158,7 @@ ch2 sample       2         2
 
 		try
 		{
-			fis = new FileInputStream(new File(filename));
+			fis = new FileInputStream(new File(fileName));
 			fc=fis.getChannel();
 
 			///need to limit range
@@ -161,13 +169,23 @@ ch2 sample       2         2
 					+fromPos*props.getBlockAlign(),
 				frames*props.getBlockAlign());
 
-			if(!isBigEndian)
+			isBigEndian=false;
+			if(props.getFileType()==props.AIFC_FILE
+				|| props.getFileType()==props.AIFF_FILE
+			)
 			{
-				//assume RIFF data is little endian
-				mbb.order(ByteOrder.LITTLE_ENDIAN);
+				isBigEndian=true;
+			}
+
+			if(isBigEndian)
+			{
+				p("***setting byteorder BIG_ENDIAN");
+				mbb.order(ByteOrder.BIG_ENDIAN);
 			}
 			else
 			{
+				p("***setting byteorder LITTLE_ENDIAN");
+				//assume RIFF data is little endian
 				mbb.order(ByteOrder.LITTLE_ENDIAN);
 			}
 
@@ -175,11 +193,6 @@ ch2 sample       2         2
 
 			abortRequested=false;
 			thread=new Thread(this);
-
-			status=STARTED;
-			setChanged();
-			notifyObservers(STARTED);
-			clearChanged();
 
 			//p("scanning sample data...");
 			thread.start();
@@ -225,6 +238,11 @@ ch2 sample       2         2
 			p("no work to do: width==0, props invalid or no samples to proess.");
 			return;
 		}
+
+		status=STARTED;
+		setChanged();
+		notifyObservers(STARTED);
+		clearChanged();
 
 		float currentValue=0;
 
@@ -323,6 +341,7 @@ ch2 sample       2         2
 	private final byte[] b2=new byte[2];
 	private final byte[] b3=new byte[3];
 	private final byte[] b4=new byte[4];
+	private final byte[] b8=new byte[8];
 
 	public float nextSampleValue(MappedByteBuffer buf)
 	{
@@ -342,17 +361,47 @@ ch2 sample       2         2
 			}
 			else
 			{
-				//sample values up to 8 bit are supposed to be unsigned
-				return ToFloat.unsignedByte(buf.get());
+				if(props.getFileType()==props.AIFF_FILE
+					|| props.getFileType()==props.AIFC_FILE
+				)
+				{
+					return ToFloat.signedByte(buf.get());
+				}
+				else if(props.getFileType()==props.RIFF_FILE)
+				{
+					//RIFF sample values up to 8 bit are supposed to be unsigned (?)
+					return ToFloat.unsignedByte(buf.get());
+				}
+				//else
+				//{
+				//}
 			}
 		}
-		//omitting 12 bit
+
+///
+//add 12 bit
 
 		//2 bytes per sample and channel
 		else if(props.getBitsPerSample()==16)
 		{
 			buf.get(b2);
-			return ToFloat.signed16(b2,isBigEndian);
+
+			if(props.getTag()==props.WAVE_FORMAT_ULAW)
+			{
+//				return ToFloat.ulaw( b2 );
+///dummy
+return 0.2f;
+			}
+			else if(props.getTag()==props.WAVE_FORMAT_ALAW)
+			{
+//				return ToFloat.alaw( b2 );
+///dummy
+return 0.3f;
+			}
+			else
+			{
+				return ToFloat.signed16(b2,isBigEndian);
+			}
 		}
 		//3 bytes per sample and channel
 		else if(props.getBitsPerSample()==24)
@@ -376,7 +425,22 @@ ch2 sample       2         2
 				return buf.getFloat();
 			}
 		}
-		//more, dummy
+		//8 bytes per sample and channel
+		else if(props.getBitsPerSample()==64)
+		{
+			//test whether integer or float
+			if(props.getTag()==props.WAVE_FORMAT_LINEAR_PCM
+				|| props.getSubFormat()==props.WAVE_FORMAT_LINEAR_PCM)
+			{
+				buf.get(b8);
+				return ToFloat.signed64(b8,isBigEndian);
+			}
+			else //assume double, return float
+			{
+				return (float)buf.getDouble();
+			}
+		}
+		//dummy
 		return 0;
 	}//end nextSampleValue
 

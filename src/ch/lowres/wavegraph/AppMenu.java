@@ -125,13 +125,11 @@ public class AppMenu extends JMenuBar
 	private static JMenu menu_help=new JMenu("Help");
 	private static JMenuItem mi_about=new JMenuItem("About...");
 
-	private Main m;
+	private static Main m;
 
 //=======================================================
-	public AppMenu(Main m)
+	public AppMenu()
 	{
-		this.m=m;
-
 		createMenu();
 		addActionListeners();
 	}

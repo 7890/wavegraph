@@ -74,7 +74,7 @@ public class Main //implements Observer
 	public static int windowHeight=0;
 
 	public static WaveGraph graph;
-	public static WaveProperties props;
+	public static AudioFormat props;
 	public static GraphObserver graphObserver;
 
 	//map containing all global key actions
@@ -89,6 +89,13 @@ public class Main //implements Observer
 
 //=======================================================
 	public Main()
+	{
+		init();
+		mainframe.show();
+	}//end constructor
+
+//=======================================================
+	private static void init()
 	{
 		createShutDownHook();
 		if(os.isMac())
@@ -108,7 +115,7 @@ public class Main //implements Observer
 
 		Fonts.init();
 
-		applicationMenu=new AppMenu(this);
+		applicationMenu=new AppMenu();
 		applicationMenu.setNoFileLoaded();
 		createGUI();
 		addListeners();
@@ -119,9 +126,7 @@ public class Main //implements Observer
 		Fonts.change(mainframe);
 		Fonts.change(about);
 		about.updateText();
-
-		mainframe.show();
-	}//end constructor
+	}
 
 //=======================================================
 	public static String showOpenFileDialog()
@@ -343,7 +348,8 @@ public class Main //implements Observer
 		}
 
 		genericInfoLabel.setText(
-			props.getBitsPerSample()+" bit "
+			props.getFileTypeName()+" "
+			+props.getBitsPerSample()+" bit "
 			+props.getWaveFormat()+", "
 			+props.getSampleRate()+" Hz, "
 			+channelLabel+", "
