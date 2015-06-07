@@ -31,7 +31,7 @@ public class AboutDialog extends ADialog
 		sb.append(BuildInfo.getGitCommit()+" (V "+g.progVersion+")</p>");
 
 		sb.append("<p><strong>"+g.progName+"</strong></p>");
-		sb.append("<h2>"+"Visualize RIFF WAVE Files"+"</h2>");
+		sb.append("<h2>"+"Visualize PCM WAVE Files"+"</h2>");
 /*
 
 		sb.append("<p><strong>"+l.tr("Credits & Program Libraries")+"</strong></p>");
