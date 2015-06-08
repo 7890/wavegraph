@@ -187,7 +187,7 @@ function build_javadoc
 #========================================================================
 #execute:
 
-for tool in {java,javac,jar,cat,mkdir,ls,cp,sed,date,uname,git,unzip}; \
+for tool in {java,javac,jar,javadoc,cat,mkdir,ls,cp,sed,date,uname,git,unzip}; \
 	do checkAvail "$tool"; done
 
 mkdir -p "$build"
