@@ -196,6 +196,7 @@ public class AppMenu extends JMenuBar
 
 		menu_file.addMenuListener(listener);
 		sub_edit_selection.addMenuListener(listener);
+		menu_transport.addMenuListener(listener);
 		menu_view.addMenuListener(listener);
 		menu_help.addMenuListener(listener);
 
