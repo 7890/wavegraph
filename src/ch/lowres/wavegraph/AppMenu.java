@@ -58,6 +58,25 @@ public class AppMenu extends JMenuBar
 	private static JMenuItem mi_align_selection_start_to_edit_point=new JMenuItem("To Edit Point");
 	private static JMenuItem mi_align_selection_end_to_edit_point=new JMenuItem("To Edit Point");
 
+//mostly dummy
+	private static JMenu menu_transport=new JMenu("Transport");
+
+	private static JMenuItem mi_toggle_pause_play=		new JMenuItem("Toggle Pause / Play");
+
+	private static JMenuItem mi_play_selection=		new JMenuItem("Play Selection");
+	private static JMenuItem mi_play_loop_selection=	new JMenuItem("Loop Selection");
+
+	private static JMenuItem mi_playhead_to_start=		new JMenuItem("Playhead to Start (0)");
+	private static JMenuItem mi_playhead_to_start_of_viewport=		new JMenuItem("Playhead to Start of Viewport");
+	private static JMenuItem mi_playhead_to_start_of_selection=		new JMenuItem("Playhead to Start of Selection");
+	private static JMenuItem mi_playhead_to_end_of_selection=		new JMenuItem("Playhead to End of Selection");
+
+	private static JMenuItem mi_playhead_to_editpoint=	new JMenuItem("Playhead to Editpoint");
+	private static JMenuItem mi_editpoint_to_playhead=	new JMenuItem("Editpoint to Playhead");
+
+//set editpoint vs. set playhead with single click vs. set both
+//ph return to start of play on pause
+
 	private static JMenu menu_view=new JMenu("View");
 
 	private static JMenu sub_view_window=new JMenu("Window");
@@ -162,6 +181,9 @@ public class AppMenu extends JMenuBar
 		mi_quit.setAccelerator(
 			KeyStroke.getKeyStroke(KeyEvent.VK_Q, m.ctrlOrCmd));
 
+		mi_toggle_pause_play.setAccelerator(
+			KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
+
 		mi_font_larger.setAccelerator(
 			KeyStroke.getKeyStroke('+'));
 
@@ -170,6 +192,7 @@ public class AppMenu extends JMenuBar
 
 		mi_font_default.setAccelerator(
 			KeyStroke.getKeyStroke('='));
+
 
 		menu_file.addMenuListener(listener);
 		sub_edit_selection.addMenuListener(listener);
@@ -229,6 +252,22 @@ public class AppMenu extends JMenuBar
 
 		sub_edit_selection.setMnemonic('S');
 		add(sub_edit_selection);
+
+///
+		menu_transport.add(mi_toggle_pause_play);
+		menu_transport.add(mi_play_selection);
+		menu_transport.add(mi_play_loop_selection);
+		menu_transport.add(new JSeparator());
+		menu_transport.add(mi_playhead_to_start);
+		menu_transport.add(mi_playhead_to_start_of_viewport);
+		menu_transport.add(mi_playhead_to_start_of_selection);
+		menu_transport.add(mi_playhead_to_end_of_selection);
+		menu_transport.add(mi_playhead_to_editpoint);
+		menu_transport.add(mi_editpoint_to_playhead);
+		menu_transport.setMnemonic('T');
+
+		add(menu_transport);
+		menu_transport.setEnabled(false);
 
 		sub_view_window_info_top.add(mi_show_info_top);
 		sub_view_window_info_top.add(mi_hide_info_top);
@@ -550,6 +589,15 @@ public class AppMenu extends JMenuBar
 			public void actionPerformed(ActionEvent e)
 			{
 				m.graph.clearSelectionRange();
+			}
+		});
+
+		mi_toggle_pause_play.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				///
+				m.is_playing=!m.is_playing;
 			}
 		});
 
@@ -903,6 +951,7 @@ public class AppMenu extends JMenuBar
 		//add to main menus
 		menu_file.addMenuListener(menuListener);
 		sub_edit_selection.addMenuListener(menuListener);
+		menu_transport.addMenuListener(menuListener);
 		menu_view.addMenuListener(menuListener);
 		menu_help.addMenuListener(menuListener);
 	}//end addActionListeners
@@ -911,6 +960,7 @@ public class AppMenu extends JMenuBar
 	public void setNoFileLoaded()
 	{
 		sub_edit_selection.setEnabled(false);
+		menu_transport.setEnabled(false);
 		sub_view_canvas.setEnabled(false);
 	}
 
@@ -918,6 +968,7 @@ public class AppMenu extends JMenuBar
 	public void setFileLoaded()
 	{
 		sub_edit_selection.setEnabled(true);
+		menu_transport.setEnabled(true);
 		sub_view_canvas.setEnabled(true);		
 	}
 }//end class AppMenu

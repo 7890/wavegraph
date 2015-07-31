@@ -87,13 +87,16 @@ public class Main //implements Observer
 
 	public static javax.swing.Timer updateTimer=new javax.swing.Timer(-1,null);
 
+///mimic to know the roll status
+	public static boolean is_playing=false;
+
 //=======================================================
 	public Main()
 	{
 		init();
 		mainframe.show();
 
-////////test
+///test drive playhead
 		new Thread(new Runnable()
                 {
                         public void run()
@@ -101,17 +104,15 @@ public class Main //implements Observer
 				Point p=new Point();
 				while(true)
 				{
-//	                                p("in thread");
-
 					p=graph.getPlayheadPoint();
 
-					if(props!=null && props.isValid() && props.getFrameCount()>0)
+					if(is_playing && props!=null && props.isValid() && props.getFrameCount()>0)
 					{
 						graph.setPlayheadPoint(p); //repaint handled inside
-						p.x+=3;
+						p.x+=1;
 					}
 
-					try{Thread.sleep(30);}catch(Exception e){}
+					try{Thread.sleep(32);}catch(Exception e){}
 				}
                         }
                 }).start();
