@@ -61,6 +61,8 @@ public class AggregatedWaveBlock
 		boolean displayRectified, boolean displayFilled)
 	{
 /*
+traditional:
+
 
                   .coord 0,0        ._max (+0.4) * waveHeight -> baseLineY - (+)max*waveHeight
                                     |
@@ -78,6 +80,67 @@ baseLineY-----------|-|----- displayed amplitude is max of abs(min), abs(max),  
               ||.|..|||
 ---------------------------- drawing starts a bottom of wavelane
 
+
+differential:
+
+compare max values of two waveblocks, take absolute difference -> new max
+compare min values of two waveblocks, take absolute negative difference -> new min
+
+"inter-waveblock"
+
+
+                 traditional                 rectified
+
+
+                                   3    3
+                 2                 |    |    |                   |    |
+                 |    1       0    |1   |1   |         |         |    |
+ch1              |____|___0___.___________   |____|____|____.____|____|__
+                 |    0   |   0
+                -1        |
+                         -2
+
+
+                          2
+                 1        |   1              |         |    |
+ch2              |____0___|___|____.______   |____|____|____|____.____|__
+                 |    |   0   |
+                -1   -1      -1         |-1
+                                       -2
+                                                                      |
+                                                                      |
+                                        4                             |
+                                   3    |              |              |
+                          2        |    |              |         |    |
+                 1    1   |   1    |1   |         |    |    |    |    |
+diff             |____|___|___|_________|__  |____|____|____|____|____|__
+                 0    |   |   |         |                             ^
+                     -1   |  -1         |                       high bar means:
+                         -2             |                       large difference
+                                       -3                       in min/max values of compared
+                                                                waveblocks
+
+1=|2-1|  0=-|-1 - -1|
+1=|1-0| -1=-| 0 - -1|
+2=|0-2| -2=-|-2 -  0|
+1=|0-1| -1=-| 0 - -1|
+2=|2-0|  1=-| 1 -  0|
+
+x=| 3 - -1| y=-| 1 - -2|
+x=4         y=-3
+
+(not implemented)
+
+
+"non-linear time"
+
+sort by
+	max: blocks with highest max values first
+	min: blocks with most negative min values first
+	avg: blocks with highest avg values first
+	invert: reverse output
+
+(not implemented)
 
 */
 		if(!displayRectified)//traditional

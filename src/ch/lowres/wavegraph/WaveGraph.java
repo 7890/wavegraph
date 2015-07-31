@@ -79,6 +79,8 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 
 	private Point editPoint=new Point(0,0);
 
+	private Point playheadPoint=new Point(0,0);
+
 	//offset of mouse press position to positionsSelection[0]
 	private int offsetToSelectionStart=0;
 	private int scrollOffsetAtPress=0;
@@ -124,6 +126,11 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	private boolean displayLimits=true;
 	private boolean displayGap=true;
 
+
+////
+	private boolean displayDifferential=true;
+
+
 	private boolean displayHorizontalScrollbar=true;
 
 	private float waveHeightFactor=.95f;
@@ -161,6 +168,7 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	public final static int SET_SELECTION			=1112;
 
 	public final static int SET_EDIT_POINT			=1200;
+	public final static int SET_PLAYHEAD_POINT		=1201;
 
 	public final static int MOUSE_MOVED			=1300;
 	public final static int MOUSE_DRAG_CANVAS_MOVE		=1301;
@@ -241,6 +249,41 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 	public Point getEditPoint()
 	{
 		return editPoint;
+	}
+
+//=======================================================
+	public boolean isInViewport(Point p)
+	{
+		if(p.x>=(int)scrollOffset 
+			&& p.x<(int)(scrollOffset+visibleRect.getWidth()))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+//=======================================================
+	public void setPlayheadPoint(Point p)
+	{
+		////validity check here
+		playheadPoint=p;
+
+		if(isInViewport(p))
+		{
+	                singlePixelChange=true;
+			panel.repaint();
+		}
+
+		notifyObservers(SET_PLAYHEAD_POINT);
+	}
+
+//=======================================================
+	public Point getPlayheadPoint()
+	{
+		return playheadPoint;
 	}
 
 //=======================================================
@@ -337,6 +380,8 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		positionAtShiftChange=new Point(0,0);
 
 		editPoint=new Point(0,0);
+
+		playheadPoint=new Point(0,0);
 	}
 
 //=======================================================
@@ -1258,8 +1303,14 @@ public class WaveGraph extends JScrollPane implements MouseMotionListener, Mouse
 		{
 			notifyObservers(MOUSE_CLICKED_IN_PLACE_1);
 
-			//set makrer
+			//set marker
 			setEditPoint(positions[0].getPoint());
+
+//test
+//set playhead
+setPlayheadPoint(positions[0].getPoint());
+
+
 
 			if(positions[0].getPoint().y<visibleRect.getHeight()/2)
 			{
@@ -1600,6 +1651,10 @@ lookahead 1 segement to connect middle to middle
 				g2.setColor(Colors.red);
 				g2.fillRect((int)editPoint.x+(positionsCanvasMove[1].x-positionsCanvasMove[0].x), 0,1, 1000);
 
+				//playhead
+				g2.setColor(Colors.blue);
+				g2.fillRect((int)playheadPoint.x+(positionsCanvasMove[1].x-positionsCanvasMove[0].x), 0,1, 1000);
+
 				singlePixelChange=false;
 				return;
 			}
@@ -1630,6 +1685,10 @@ lookahead 1 segement to connect middle to middle
 				g2.setColor(Colors.red);
 				g2.fillRect((int)editPoint.x, 0,1, 1000);
 
+				//playhead
+				g2.setColor(Colors.blue);
+				g2.fillRect((int)playheadPoint.x, 0,1, 1000);
+
 				singlePixelChange=false;
 				//already done :)
 
@@ -1650,7 +1709,11 @@ lookahead 1 segement to connect middle to middle
 
 			//draw over edit point (not in image)
 			g2g.setColor(Colors.red);
-			g2g.fillRect(editPoint.x, 0,1, 1000);
+			g2g.fillRect((int)editPoint.x, 0,1, 1000);
+
+			//playhead
+			g2g.setColor(Colors.blue);
+			g2g.fillRect((int)playheadPoint.x, 0,1, 1000);
 
 			//mouse will be drawn over as soon as moved
 		}//end new paintComponent

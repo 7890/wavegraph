@@ -39,6 +39,10 @@ public class GraphObserver implements Observer
 			//m.p("edit point changed");
 			m.updateEditPointLabel();
 		}
+		else if(status==WaveGraph.SET_PLAYHEAD_POINT)
+		{
+////
+		}
 		else if(status>=WaveGraph.MOUSE_MOVED 
 			&& status <=WaveGraph.MOUSE_EXITED)
 		{

@@ -92,6 +92,31 @@ public class Main //implements Observer
 	{
 		init();
 		mainframe.show();
+
+////////test
+		new Thread(new Runnable()
+                {
+                        public void run()
+                        {
+				Point p=new Point();
+				while(true)
+				{
+//	                                p("in thread");
+
+					p=graph.getPlayheadPoint();
+
+					if(props!=null && props.isValid() && props.getFrameCount()>0)
+					{
+						graph.setPlayheadPoint(p); //repaint handled inside
+						p.x+=3;
+					}
+
+					try{Thread.sleep(30);}catch(Exception e){}
+				}
+                        }
+                }).start();
+
+
 	}//end constructor
 
 //=======================================================
