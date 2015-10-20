@@ -1,8 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
 #//tb/1501/06
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#only works with /bin/bash
+#DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+FULLPATH="`pwd`/$0"
+DIR=`dirname "$FULLPATH"`
 
 src="$DIR"/src
 build="$DIR"/build
@@ -17,10 +20,11 @@ jtarget=1.6
 package_path=ch/lowres/wavegraph
 
 #used for ../**/*.java syntax
-shopt -s globstar
+#only works with /bin/bash
+#shopt -s globstar
 
 #========================================================================
-function checkAvail()
+checkAvail()
 {
 	which "$1" >/dev/null 2>&1
 	ret=$?
@@ -32,7 +36,7 @@ function checkAvail()
 }
 
 #========================================================================
-function create_build_info()
+create_build_info()
 {
 	now="`date`"
 	uname="`uname -s -p`"
@@ -66,7 +70,7 @@ __EOF__
 }
 
 #========================================================================
-function compile_wavegraph()
+compile_wavegraph()
 {
 	echo ""
 	echo ""
@@ -79,7 +83,8 @@ function compile_wavegraph()
 	unzip -p "$archive"/AppleJavaExtensions.zip \
 		AppleJavaExtensions/AppleJavaExtensions.jar > "$classes"/AppleJavaExtensions.jar
 
-	javac -source $jsource -target $jtarget -nowarn -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" "$src"/**/*.java
+#	javac -source $jsource -target $jtarget -nowarn -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" "$src"/**/*.java
+	find "$src" -name *.java -exec javac -source $jsource -target $jtarget -nowarn -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" {} \;
 
 	ret=$?
 	if [ $ret -ne 0 ]
@@ -93,7 +98,7 @@ function compile_wavegraph()
 }
 
 #========================================================================
-function handle_ubuntu_font
+handle_ubuntu_font()
 {
 	mkdir -p "$classes"/resources/fonts
 	mkdir -p "$classes"/resources/licenses/ubuntu-font-family
@@ -114,7 +119,7 @@ function handle_ubuntu_font
 }
 
 #========================================================================
-function build_jar
+build_jar()
 {
 	echo ""
 	echo ""
@@ -165,7 +170,7 @@ function build_jar
 }
 
 #========================================================================
-function build_javadoc
+build_javadoc()
 {
 	package=`echo "$package_path" | sed 's/\//./g'`
 
@@ -187,7 +192,7 @@ function build_javadoc
 #========================================================================
 #execute:
 
-for tool in {java,javac,jar,javadoc,cat,mkdir,ls,cp,sed,date,uname,git,unzip}; \
+for tool in java javac jar javadoc cat mkdir ls cp sed date uname git unzip; \
 	do checkAvail "$tool"; done
 
 mkdir -p "$build"
