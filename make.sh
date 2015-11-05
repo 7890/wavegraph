@@ -8,13 +8,18 @@ FULLPATH="`pwd`/$0"
 DIR=`dirname "$FULLPATH"`
 
 src="$DIR"/src
-build="$DIR"/build
+build="$DIR"/_build
 archive="$DIR"/archive
 classes="$build"/classes
 doc="$DIR"/doc
 
 jsource=1.6
 jtarget=1.6
+
+#linux / osx different mktemp call
+TMPFILE=`mktemp 2>/dev/null || mktemp -t /tmp`
+
+JAVAC="javac -source $jsource -target $jtarget -nowarn"
 
 #relative to $src
 package_path=ch/lowres/wavegraph
@@ -41,12 +46,8 @@ create_build_info()
 	now="`date`"
 	uname="`uname -s -p`"
 	jvm="`javac -version 2>&1 | head -1 | sed 's/"/''/g'`"
-	javac_opts=" -source $jsource -target $jtarget -nowarn"
-	cur="`pwd`"
 	cd "$DIR"
-#	git_head_commit_id="`git rev-parse HEAD`"
 	git_master_ref=`git show-ref master | head -1`
-	cd "$cur"
 
 	cat - << __EOF__
 //generated at build time
@@ -55,7 +56,7 @@ public class BuildInfo
 {
 	public static String get()
 	{
-		return "date: $now\nuname -s -p: $uname\njavac -version: $jvm\njavac Options: $javac_opts\ngit show-ref master: $git_master_ref";
+		return "date: $now\nuname -s -p: $uname\njavac -version: $jvm\njavac Options: $JAVAC\ngit show-ref master: $git_master_ref";
 	}
 	public static String getGitCommit()
 	{
@@ -83,8 +84,8 @@ compile_wavegraph()
 	unzip -p "$archive"/AppleJavaExtensions.zip \
 		AppleJavaExtensions/AppleJavaExtensions.jar > "$classes"/AppleJavaExtensions.jar
 
-#	javac -source $jsource -target $jtarget -nowarn -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" "$src"/**/*.java
-	find "$src" -name *.java -exec javac -source $jsource -target $jtarget -nowarn -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" {} \;
+	find "$src" -name *.java > "$TMPFILE"
+	$JAVAC -classpath "$classes":"$classes"/AppleJavaExtensions.jar -sourcepath "$src" -d "$classes" @"$TMPFILE"
 
 	ret=$?
 	if [ $ret -ne 0 ]
@@ -92,9 +93,6 @@ compile_wavegraph()
 		echo "error while compiling."
 		exit 1
 	fi
-
-	echo "start with:"
-	echo "java -Xms1024m -Xmx1024m -cp .:build/classes/ ch.lowres.wavegraph.Main"
 }
 
 #========================================================================
@@ -159,14 +157,14 @@ build_jar()
 	echo "build_jar done."
 
 	echo "start with"
-	echo "java -Xms1024m -Xmx1024m -jar build/wavegraph_$now.jar"
+	echo "java -Xms1024m -Xmx1024m -jar "$build"/wavegraph_$now.jar"
 
 #osx:
 #-Xdock:name="Wavegraph"
 
 	#start now
 	cd "$DIR"
-	java -Xms1024m -Xmx1024m -jar build/wavegraph_$now.jar #testdata
+	java -Xms1024m -Xmx1024m -jar "$build"/wavegraph_$now.jar #testdata
 }
 
 #========================================================================
